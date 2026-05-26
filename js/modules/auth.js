@@ -7,6 +7,11 @@ const AuthModule = {
         if (!window.firebase) return;
 
         window.firebase.onAuthStateChanged(FB.auth, async (firebaseUser) => {
+            // Remove o loading inicial
+            document.body.classList.remove('loading');
+            const loadingIndicator = document.getElementById('initial-loading');
+            if (loadingIndicator) loadingIndicator.classList.add('hidden');
+
             if (firebaseUser) {
                 // Ao logar, buscamos os dados complementares no Firestore
                 const userDoc = await Store.list('usuarios', [{ field: 'email', op: '==', value: firebaseUser.email }]);

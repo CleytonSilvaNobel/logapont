@@ -35,11 +35,5 @@ const FB = {
 // Inicializa o Firebase assim que o script carregar
 // Nota: Em um ambiente real, o usuário preencheria a config acima.
 // Para o MVP, deixaremos a estrutura pronta.
-window.addEventListener('DOMContentLoaded', () => {
-    // Só inicializa se a apiKey for válida (evita erros no carregamento inicial)
-    if (firebaseConfig.apiKey.includes('A DEFINIR')) {
-        console.warn('Firebase: Por favor, configure sua apiKey em js/firebase-config.js');
-    } else {
-        FB.init();
-    }
-});
+// Inicialização Imediata
+FB.init();
