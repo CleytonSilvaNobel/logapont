@@ -1,32 +1,27 @@
 /**
  * LOGAPONT - Módulo de Autenticação
+ * Usando Firebase Auth compat - mesmo padrão do LogAgend
  */
 
 const AuthModule = {
     init() {
-        if (!window.firebase || !FB.auth) {
-            // Se o Firebase ainda não carregou, espera mais um pouco
-            setTimeout(() => this.init(), 50);
-            return;
-        }
-
-        window.firebase.onAuthStateChanged(FB.auth, async (firebaseUser) => {
-            // Remove o loading inicial
-            document.body.classList.remove('loading');
-            const loadingIndicator = document.getElementById('initial-loading');
-            if (loadingIndicator) loadingIndicator.classList.add('hidden');
+        // onAuthStateChanged: aguarda resposta do Firebase antes de qualquer renderização
+        FB.auth.onAuthStateChanged(async (firebaseUser) => {
+            // Remove a tela de loading assim que o Firebase responde
+            const loading = document.getElementById('initial-loading');
+            if (loading) loading.classList.add('hidden');
 
             if (firebaseUser) {
-                // Ao logar, buscamos os dados complementares no Firestore
-                const userDoc = await Store.list('usuarios', [{ field: 'email', op: '==', value: firebaseUser.email }]);
+                // Buscar perfil no Firestore
+                const userDocs = await Store.list('usuarios', [{ field: 'email', op: '==', value: firebaseUser.email }]);
 
-                if (userDoc && userDoc.length > 0) {
-                    App.showApp(userDoc[0]);
+                if (userDocs && userDocs.length > 0) {
+                    App.showApp(userDocs[0]);
                 } else {
-                    // Usuário autenticado no Firebase mas sem perfil no Firestore (caso de erro ou novo admin)
+                    // Primeiro acesso do administrador
                     if (firebaseUser.email === 'cleyton.silva@nobelpack.com.br') {
                         App.showApp({
-                            nome: 'Administrador Inicial',
+                            nome: 'Administrador',
                             email: firebaseUser.email,
                             setor: 'ADMIN',
                             perfil: 'ADMIN'
@@ -67,6 +62,7 @@ const AuthModule = {
                             <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Senha</label>
                             <input type="password" id="login-password" class="form-input" placeholder="••••••••">
                         </div>
+                        <div id="login-error" class="text-red-500 text-sm text-center hidden"></div>
                         <button onclick="AuthModule.handleLogin()" id="btn-login" class="w-full btn btn-primary py-4 rounded-2xl text-lg mt-4">
                             <span>Acessar Sistema</span>
                             <i data-lucide="arrow-right" class="w-5 h-5"></i>
@@ -80,25 +76,43 @@ const AuthModule = {
             </div>
         `;
         lucide.createIcons();
+
+        // Permitir login com Enter
+        setTimeout(() => {
+            const pwInput = document.getElementById('login-password');
+            if (pwInput) pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') AuthModule.handleLogin(); });
+        }, 100);
     },
 
     async handleLogin() {
-        const email = document.getElementById('login-email').value;
+        const email = document.getElementById('login-email').value.trim();
         const password = document.getElementById('login-password').value;
         const btn = document.getElementById('btn-login');
+        const errEl = document.getElementById('login-error');
 
         if (!email || !password) {
             return Utils.notify('Preencha todos os campos.', 'warning');
         }
 
         try {
+            errEl.classList.add('hidden');
             btn.disabled = true;
             btn.innerHTML = `<span>Autenticando...</span>`;
-            await window.firebase.signInWithEmailAndPassword(FB.auth, email, password);
-            Utils.notify('Login realizado com sucesso!');
+
+            await FB.auth.signInWithEmailAndPassword(email, password);
+            // O onAuthStateChanged cuida do resto
         } catch (error) {
             console.error('Login error:', error);
-            Utils.notify('Erro ao autenticar. Verifique seus dados.', 'danger');
+            let msg = 'Erro ao autenticar. Verifique seus dados.';
+            if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+                msg = 'E-mail ou senha incorretos.';
+            } else if (error.code === 'auth/user-not-found') {
+                msg = 'Usuário não encontrado.';
+            } else if (error.code === 'auth/too-many-requests') {
+                msg = 'Muitas tentativas. Aguarde alguns minutos.';
+            }
+            errEl.textContent = msg;
+            errEl.classList.remove('hidden');
             btn.disabled = false;
             btn.innerHTML = `<span>Acessar Sistema</span><i data-lucide="arrow-right" class="w-5 h-5"></i>`;
             lucide.createIcons();
@@ -107,7 +121,7 @@ const AuthModule = {
 
     async logout() {
         if (confirm('Deseja realmente sair do sistema?')) {
-            await window.firebase.signOut(FB.auth);
+            await FB.auth.signOut();
             location.reload();
         }
     }

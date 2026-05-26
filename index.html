@@ -20,9 +20,6 @@
                         success: '#10b981',
                         warning: '#f59e0b',
                         danger: '#ef4444',
-                    },
-                    backdropBlur: {
-                        xs: '2px',
                     }
                 }
             }
@@ -43,10 +40,6 @@
     <link rel="stylesheet" href="css/styles.css">
 
     <style>
-        [x-cloak] {
-            display: none !important;
-        }
-
         body {
             font-family: 'Inter', sans-serif;
         }
@@ -60,20 +53,29 @@
     </style>
 </head>
 
+<!-- ====================================================
+     Firebase SDK v8 (COMPAT) - Mesmo padrão dos projetos
+     LogAgend e LogTransf que funcionam em produção
+     ==================================================== -->
+<!-- Firebase App (base) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<!-- Firebase Auth -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<!-- Firebase Firestore -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <body class="bg-gray-50 text-slate-900 dark:bg-dark dark:text-white transition-colors duration-300">
+
     <!-- Loading Inicial -->
-    <div id="initial-loading"
-        class="fixed inset-0 z-[100] bg-white dark:bg-slate-950 flex flex-col items-center justify-center transition-opacity duration-500">
-        <div
-            class="w-16 h-16 border-4 border-indigo-100 dark:border-slate-800 border-t-indigo-600 rounded-full animate-spin mb-4">
-        </div>
+    <div id="initial-loading" class="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center">
+        <div class="w-14 h-14 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
         <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 animate-pulse">Iniciando LOGAPONT...
         </p>
     </div>
 
-    <!-- Login Screen -->
-    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-100 dark:bg-dark">
-        <!-- Content injected by login.js -->
+    <!-- Container de Login -->
+    <div id="login-screen" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-100 dark:bg-dark">
+        <!-- Content injected by auth.js -->
     </div>
 
     <!-- App Shell (Hidden by default) -->
@@ -102,20 +104,7 @@
     <!-- Modals Container -->
     <div id="modal-container"></div>
 
-    <!-- Firebase SDKs (via CDN) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, query, onSnapshot, orderBy, where, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // Export to window for access by our modules
-        window.firebase = {
-            initializeApp, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
-            getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, query, onSnapshot, orderBy, where, runTransaction, serverTimestamp
-        };
-    </script>
-
-    <!-- App Scripts -->
+    <!-- App Scripts (carregam APÓS o Firebase compat acima) -->
     <script src="js/utils.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/store.js"></script>
@@ -126,9 +115,11 @@
     <script src="js/modules/kanban.js"></script>
     <script src="js/modules/details.js"></script>
     <script src="js/modules/admin.js"></script>
+    <script src="js/modules/movimentacao.js"></script>
 
     <!-- Entry Point -->
     <script src="js/app.js"></script>
+
 </body>
 
 </html>

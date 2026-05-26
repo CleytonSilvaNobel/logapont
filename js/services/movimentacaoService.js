@@ -1,5 +1,6 @@
 /**
  * LOGAPONT - Serviço de Movimentações
+ * Usando API compat do Firebase
  */
 
 const MovimentacaoService = {
@@ -7,14 +8,14 @@ const MovimentacaoService = {
      * Gera o ID Sequencial (MOV-XXXXXX) via Transação do Firestore
      */
     async generateSequentialId() {
-        const counterRef = window.firebase.doc(FB.db, 'counters', 'movimentacoes');
+        const counterRef = FB.db.collection('counters').doc('movimentacoes');
 
         try {
-            const result = await window.firebase.runTransaction(FB.db, async (transaction) => {
+            const result = await FB.db.runTransaction(async (transaction) => {
                 const counterDoc = await transaction.get(counterRef);
 
                 let nextValue = 1;
-                if (counterDoc.exists()) {
+                if (counterDoc.exists) {
                     nextValue = (counterDoc.data().valor || 0) + 1;
                 }
 
@@ -75,13 +76,11 @@ const MovimentacaoService = {
      */
     async updateStatus(movId, de, para, acao, observacao = '') {
         try {
-            const movRef = window.firebase.doc(FB.db, 'movimentacoes', movId);
-            const movDoc = await window.firebase.getDoc(movRef);
+            const movDoc = await Store.get('movimentacoes', movId);
 
-            if (!movDoc.exists()) throw new Error('Movimentação não encontrada');
+            if (!movDoc) throw new Error('Movimentação não encontrada');
 
-            const currentMov = movDoc.data();
-            const historico = currentMov.historico || [];
+            const historico = movDoc.historico || [];
 
             const novoEvento = {
                 data: new Date().toISOString(),

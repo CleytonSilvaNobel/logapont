@@ -1,5 +1,6 @@
 /**
  * LOGAPONT - Configuração do Firebase
+ * Usando SDK v9 COMPAT - mesmo padrão dos projetos LogAgend/LogTransf
  */
 
 const firebaseConfig = {
@@ -13,34 +14,13 @@ const firebaseConfig = {
     measurementId: "G-MWBSM1HFCP"
 };
 
-// Singleton para o Firebase
+// Inicializa o Firebase (SDK compat está disponível imediatamente via <script> acima)
+firebase.initializeApp(firebaseConfig);
+
+// Referências globais
 const FB = {
-    auth: null,
-    db: null,
-
-    init() {
-        if (!window.firebase) {
-            console.error('Firebase SDK não carregado via CDN.');
-            return;
-        }
-
-        const app = window.firebase.initializeApp(firebaseConfig);
-        this.auth = window.firebase.getAuth(app);
-        this.db = window.firebase.getFirestore(app);
-
-        console.log('Firebase Inicializado com Sucesso');
-    }
+    auth: firebase.auth(),
+    db: firebase.firestore()
 };
 
-// Inicialização Robusta: Aguarda o Firebase SDK (que carrega como módulo) estar disponível
-function bootstrapFirebase() {
-    if (window.firebase) {
-        console.log('Firebase SDK detectado. Inicializando...');
-        FB.init();
-    } else {
-        // Tenta novamente em 50ms se ainda não carregou
-        setTimeout(bootstrapFirebase, 50);
-    }
-}
-
-bootstrapFirebase();
+console.log('Firebase Inicializado com Sucesso (compat mode)');
