@@ -15,7 +15,7 @@ const AuthModule = {
                     App.showApp(userDoc[0]);
                 } else {
                     // Usuário autenticado no Firebase mas sem perfil no Firestore (caso de erro ou novo admin)
-                    if (firebaseUser.email === 'admin@logapont.com') {
+                    if (firebaseUser.email === 'cleyton.silva@nobelpack.com.br') {
                         App.showApp({
                             nome: 'Administrador Inicial',
                             email: firebaseUser.email,
