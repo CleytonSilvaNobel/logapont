@@ -91,26 +91,26 @@
 }
 
 #sidebar.collapsed {
-    width: 80px;
+    width: 0;
+    padding: 0;
+    opacity: 0;
+    pointer-events: none;
 }
 
-/* Esconde textos quando colapsado */
-#sidebar.collapsed .brand-info,
-#sidebar.collapsed .profile-text,
-#sidebar.collapsed .nav-btn span {
+#sidebar.collapsed * {
     display: none;
 }
 
-#sidebar.collapsed .nav-btn {
-    justify-content: center;
-    padding: 12px;
+/* Ajuste do shell quando sidebar some */
+.app-shell {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    height: 100vh;
+    transition: all 0.3s ease;
 }
 
-#sidebar.collapsed .p-6,
-#sidebar.collapsed .profile-section {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    justify-content: center;
+.sidebar-collapsed .app-shell {
+    grid-template-columns: 0 1fr;
 }
 
 /* Transitions */

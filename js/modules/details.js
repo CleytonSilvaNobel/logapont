@@ -29,26 +29,25 @@ const DetailsModule = {
                     </header>
 
                     <div class="flex-1 overflow-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <!-- Coluna Info -->
                         <div class="md:col-span-2 space-y-8">
                             <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6">
                                 <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Informações do Produto</h4>
                                 <div class="grid grid-cols-2 gap-6">
-                                    <div>
+                                    <div class="col-span-2">
                                         <label class="text-[10px] uppercase font-bold text-slate-500">Descrição</label>
                                         <p class="font-semibold text-lg">${mov.produto?.descricao}</p>
                                     </div>
                                     <div>
-                                        <label class="text-[10px] uppercase font-bold text-slate-500">ID Produto</label>
-                                        <p class="font-semibold">${mov.produto?.id || '-'}</p>
+                                        <label class="text-[10px] uppercase font-bold text-slate-500">Código</label>
+                                        <p class="font-semibold text-indigo-600">${mov.produto?.id || '-'}</p>
                                     </div>
                                     <div>
                                         <label class="text-[10px] uppercase font-bold text-slate-500">Quantidade</label>
-                                        <p class="font-semibold text-lg">${mov.quantidade?.caixas} cx / ${mov.quantidade?.unidades} un</p>
+                                        <p class="font-semibold text-lg text-slate-700 dark:text-slate-200">${mov.quantidade?.caixas} cx / ${mov.quantidade?.unidades} un</p>
                                     </div>
                                     <div>
                                         <label class="text-[10px] uppercase font-bold text-slate-500">Prioridade</label>
-                                        <p class="font-semibold text-indigo-600">${mov.prioridade}</p>
+                                        <p class="font-bold text-indigo-600">${mov.prioridade}</p>
                                     </div>
                                 </div>
                             </div>
@@ -63,7 +62,7 @@ const DetailsModule = {
                             <div>
                                 <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Histórico Operacional</h4>
                                 <div class="space-y-4">
-                                    ${(mov.historico || []).reverse().map(h => `
+                                    ${(mov.historico || []).slice().reverse().map(h => `
                                         <div class="flex gap-4">
                                             <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
                                                 <i data-lucide="activity" class="w-4 h-4 text-slate-400"></i>
@@ -73,7 +72,7 @@ const DetailsModule = {
                                                     <span class="font-bold text-sm text-slate-700 dark:text-slate-300">${h.acao}</span>
                                                     <span class="text-[10px] font-medium text-slate-400">${Utils.formatDate(h.data)}</span>
                                                 </div>
-                                                <p class="text-xs text-slate-500 mb-1">${h.usuario?.nome} alterou de <b>${h.de.etapa}</b> para <b>${h.para.etapa}</b></p>
+                                                <p class="text-xs text-slate-500 mb-1">${h.usuario?.nome} em <b>${h.para.etapa}</b></p>
                                                 ${h.observacao ? `<p class="text-xs italic text-slate-400 bg-slate-50 dark:bg-slate-800/80 p-2 rounded-lg mt-2">"${h.observacao}"</p>` : ''}
                                             </div>
                                         </div>
@@ -82,7 +81,6 @@ const DetailsModule = {
                             </div>
                         </div>
 
-                        <!-- Coluna Lateral (Status) -->
                         <div class="bg-indigo-50 dark:bg-indigo-500/5 rounded-2xl p-6 border border-indigo-100 dark:border-indigo-500/10 h-fit">
                             <h4 class="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4">Status Atual</h4>
                             <div class="mb-6">
@@ -94,10 +92,6 @@ const DetailsModule = {
                                 <div class="text-lg font-semibold text-slate-700 dark:text-slate-300 px-3 py-1 bg-white dark:bg-slate-800 border border-indigo-100 dark:border-indigo-500/20 rounded-xl inline-block">
                                     ${mov.fluxo?.situacao}
                                 </div>
-                            </div>
-                            <div class="border-t border-indigo-100 dark:border-indigo-500/10 pt-4">
-                                <div class="text-[10px] uppercase font-bold text-indigo-500/60 mb-1">Setor Responsável</div>
-                                <p class="text-sm font-medium text-slate-600 dark:text-slate-400 italic">Aguardando ação em ${mov.fluxo?.etapa}</p>
                             </div>
                         </div>
                     </div>
@@ -113,7 +107,6 @@ const DetailsModule = {
         const setor = App.user.setor;
         const buttons = [];
 
-        // Regras de permissão simplificadas
         if (etapa === 'QUALIDADE' && (setor === 'QUALIDADE' || perfil === 'ADMIN')) {
             buttons.push(`
                 <button onclick="DetailsModule.updateFlow('${mov.id}', 'LOGISTICA', 'APROVADO', 'APROVAR_QUALIDADE')" class="btn btn-primary flex-1">
@@ -162,15 +155,12 @@ const DetailsModule = {
 
             await MovimentacaoService.updateStatus(movId, current.fluxo, { etapa: nextEtapa, situacao }, acao, obs);
             this.close();
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     },
 
     reprovar(movId) {
         const obs = prompt('Descreva o motivo da reprovação (Obrigatório):');
         if (!obs) return Utils.notify('A observação é obrigatória para reprovar.', 'warning');
-
         this.updateFlow(movId, 'RETRABALHO', 'EM_PROCESSO', 'REPROVADO_QUALIDADE', obs);
     },
 
@@ -186,30 +176,39 @@ const DetailsModule = {
                         </button>
                     </header>
                     <div class="p-8 space-y-4">
-                        <div>
-                            <label class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 block">Produto</label>
-                            <input type="text" id="new-prod-desc" class="form-input" placeholder="Ex: Caixa X-25">
-                            <input type="text" id="new-prod-id" class="form-input mt-2" placeholder="ID do Produto (opcional)">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 block">Qtd Caixas</label>
-                                <input type="number" id="new-qty-cx" class="form-input" value="0">
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="col-span-1">
+                                <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Código Produto</label>
+                                <input type="text" id="new-prod-id" class="form-input" placeholder="Ex: 10020" oninput="DetailsModule.checkProduct(this.value)">
                             </div>
-                            <div>
-                                <label class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 block">Qtd Unidades</label>
-                                <input type="number" id="new-qty-un" class="form-input" value="0">
+                            <div class="col-span-2">
+                                <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Descrição do Produto</label>
+                                <input type="text" id="new-prod-desc" class="form-input" placeholder="Aguardando código...">
                             </div>
                         </div>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Qtd Caixas</label>
+                                <input type="number" id="new-qty-cx" class="form-input" value="0" oninput="DetailsModule.calculateTotal()">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Unid / Caixa</label>
+                                <input type="number" id="new-unid-cx" class="form-input bg-slate-50 dark:bg-slate-800" value="1" oninput="DetailsModule.calculateTotal()">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Total Unidades</label>
+                                <input type="number" id="new-qty-un" class="form-input bg-slate-50 dark:bg-slate-800 font-bold text-indigo-600" value="0" readonly>
+                            </div>
+                        </div>
                         <div>
-                            <label class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 block">Prioridade</label>
+                            <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Prioridade</label>
                             <select id="new-priority" class="form-input">
                                 <option value="NORMAL">NORMAL</option>
                                 <option value="ALTA">ALTA</option>
                                 <option value="URGENTE">URGENTE</option>
                             </select>
                         </div>
-                        <button onclick="DetailsModule.handleCreate()" class="w-full btn btn-primary py-4 mt-4">
+                        <button onclick="DetailsModule.handleCreate()" class="w-full btn btn-primary py-4 mt-4 shadow-indigo-500/40">
                             Criar Movimentação
                         </button>
                     </div>
@@ -217,6 +216,23 @@ const DetailsModule = {
             </div>
         `;
         lucide.createIcons();
+    },
+
+    async checkProduct(codigo) {
+        if (!codigo) return;
+        const prod = await ProdutosModule.findByCodigo(codigo);
+        if (prod) {
+            document.getElementById('new-prod-desc').value = prod.descricao;
+            document.getElementById('new-unid-cx').value = prod.unidadePorCaixa;
+            this.calculateTotal();
+            Utils.notify('Produto identificado!', 'success');
+        }
+    },
+
+    calculateTotal() {
+        const cx = parseInt(document.getElementById('new-qty-cx').value) || 0;
+        const unidCx = parseInt(document.getElementById('new-unid-cx').value) || 1;
+        document.getElementById('new-qty-un').value = cx * unidCx;
     },
 
     async handleCreate() {
@@ -236,12 +252,8 @@ const DetailsModule = {
             });
             Utils.notify('Nova MOV criada com sucesso!');
             this.close();
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     },
 
-    close() {
-        document.getElementById('modal-container').innerHTML = '';
-    }
+    close() { document.getElementById('modal-container').innerHTML = ''; }
 };

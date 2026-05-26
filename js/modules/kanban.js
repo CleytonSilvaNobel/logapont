@@ -8,8 +8,7 @@ const KanbanModule = {
         { id: 'RETRABALHO', label: 'Retrabalho' },
         { id: 'LOGISTICA', label: 'Logística' },
         { id: 'PCP', label: 'PCP' },
-        { id: 'ARMAZENAGEM', label: 'Armazenagem' },
-        { id: 'FINALIZADO', label: 'Finalizado' }
+        { id: 'ARMAZENAGEM', label: 'Armazenagem' }
     ],
 
     init() {
