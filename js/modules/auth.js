@@ -104,14 +104,20 @@ const AuthModule = {
         } catch (error) {
             console.error('Login error:', error);
             let msg = 'Erro ao autenticar. Verifique seus dados.';
+
+            // Mensagens Amigáveis
             if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
                 msg = 'E-mail ou senha incorretos.';
             } else if (error.code === 'auth/user-not-found') {
                 msg = 'Usuário não encontrado.';
             } else if (error.code === 'auth/too-many-requests') {
                 msg = 'Muitas tentativas. Aguarde alguns minutos.';
+            } else if (error.code === 'auth/api-key-not-valid') {
+                msg = 'Erro de Configuração: API Key ainda bloqueada ou inválida.';
             }
-            errEl.textContent = msg;
+
+            // Exibe o erro legível + o código técnico para debug
+            errEl.innerHTML = `${msg}<br><span class="text-[10px] opacity-50">[Código: ${error.code}]</span>`;
             errEl.classList.remove('hidden');
             btn.disabled = false;
             btn.innerHTML = `<span>Acessar Sistema</span><i data-lucide="arrow-right" class="w-5 h-5"></i>`;
