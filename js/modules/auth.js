@@ -18,18 +18,8 @@ const AuthModule = {
                 if (userDocs && userDocs.length > 0) {
                     App.showApp(userDocs[0]);
                 } else {
-                    // Primeiro acesso do administrador
-                    if (firebaseUser.email === 'cleyton.silva@nobelpack.com.br') {
-                        App.showApp({
-                            nome: 'Administrador',
-                            email: firebaseUser.email,
-                            setor: 'ADMIN',
-                            perfil: 'ADMIN'
-                        });
-                    } else {
-                        Utils.notify('Usuário sem perfil cadastrado. Contate o administrador.', 'danger');
-                        this.logout();
-                    }
+                    Utils.notify('Usuário sem perfil cadastrado no sistema. Contate o administrador.', 'danger');
+                    this.logout();
                 }
             } else {
                 this.renderLogin();

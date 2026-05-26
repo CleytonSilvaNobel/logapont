@@ -24,13 +24,16 @@
     width: 6px;
     height: 6px;
 }
+
 ::-webkit-scrollbar-track {
     background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 10px;
 }
+
 .dark ::-webkit-scrollbar-thumb {
     background: #334155;
 }
@@ -42,8 +45,15 @@
 
 /* Animations */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .animate-fade-in {
@@ -59,13 +69,51 @@
 .btn {
     @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
 }
+
 .btn-primary {
     background: var(--primary-gradient);
     @apply text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40;
 }
+
 .btn-secondary {
     @apply bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700;
 }
+
 .btn-danger {
     @apply bg-danger text-white hover:bg-red-600 shadow-lg shadow-red-500/20;
+}
+
+/* Sidebar Otimizada */
+#sidebar {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-x: hidden;
+    white-space: nowrap;
+}
+
+#sidebar.collapsed {
+    width: 80px;
+}
+
+/* Esconde textos quando colapsado */
+#sidebar.collapsed .brand-info,
+#sidebar.collapsed .profile-text,
+#sidebar.collapsed .nav-btn span {
+    display: none;
+}
+
+#sidebar.collapsed .nav-btn {
+    justify-content: center;
+    padding: 12px;
+}
+
+#sidebar.collapsed .p-6,
+#sidebar.collapsed .profile-section {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    justify-content: center;
+}
+
+/* Transitions */
+.transition-all {
+    transition: all 0.3s ease;
 }
