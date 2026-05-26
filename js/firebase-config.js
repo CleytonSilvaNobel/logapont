@@ -32,8 +32,15 @@ const FB = {
     }
 };
 
-// Inicializa o Firebase assim que o script carregar
-// Nota: Em um ambiente real, o usuário preencheria a config acima.
-// Para o MVP, deixaremos a estrutura pronta.
-// Inicialização Imediata
-FB.init();
+// Inicialização Robusta: Aguarda o Firebase SDK (que carrega como módulo) estar disponível
+function bootstrapFirebase() {
+    if (window.firebase) {
+        console.log('Firebase SDK detectado. Inicializando...');
+        FB.init();
+    } else {
+        // Tenta novamente em 50ms se ainda não carregou
+        setTimeout(bootstrapFirebase, 50);
+    }
+}
+
+bootstrapFirebase();
