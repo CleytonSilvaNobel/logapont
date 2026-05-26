@@ -4,7 +4,11 @@
 
 const AuthModule = {
     init() {
-        if (!window.firebase) return;
+        if (!window.firebase || !FB.auth) {
+            // Se o Firebase ainda não carregou, espera mais um pouco
+            setTimeout(() => this.init(), 50);
+            return;
+        }
 
         window.firebase.onAuthStateChanged(FB.auth, async (firebaseUser) => {
             // Remove o loading inicial
