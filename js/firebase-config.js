@@ -4,7 +4,7 @@
  */
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCiAGUImdK0p9EsMc7AsOvchA-DLm-crfg",
+    apiKey: "AIzaSyCiAGUImdK0p9EsMc7AsOvcHa-DLm-crfg",
     authDomain: "logapont.firebaseapp.com",
     databaseURL: "https://logapont-default-rtdb.firebaseio.com",
     projectId: "logapont",
