@@ -132,7 +132,7 @@ const ProdutosModule = {
     async handleSave(e, productId = null) {
         e.preventDefault();
         const data = {
-            codigo: document.getElementById('prod-codigo').value.trim(),
+            codigo: document.getElementById('prod-codigo').value.trim().toUpperCase(),
             descricao: document.getElementById('prod-descricao').value.trim(),
             unidadePorCaixa: parseInt(document.getElementById('prod-unid-cx').value) || 1
         };
@@ -195,7 +195,7 @@ const ProdutosModule = {
 
                 let successCount = 0;
                 for (const row of rows) {
-                    const codigo = String(row['Código'] || row['codigo'] || '').trim();
+                    const codigo = String(row['Código'] || row['codigo'] || '').trim().toUpperCase();
                     const descricao = String(row['Descrição'] || row['descricao'] || '').trim();
                     const unidCx = parseInt(row['Unid por Caixa'] || row['unid-cx'] || 1);
 
@@ -221,7 +221,9 @@ const ProdutosModule = {
     },
 
     async findByCodigo(codigo) {
-        const results = await Store.list('produtos', [{ field: 'codigo', op: '==', value: codigo }]);
+        if (!codigo) return null;
+        const normalized = codigo.trim().toUpperCase();
+        const results = await Store.list('produtos', [{ field: 'codigo', op: '==', value: normalized }]);
         return results.length > 0 ? results[0] : null;
     }
 };
