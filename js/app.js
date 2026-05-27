@@ -66,8 +66,8 @@ const App = {
                         <i data-lucide="package" class="w-6 h-6"></i>
                     </div>
                     <div class="brand-info">
-                        <h1 class="font-bold text-xl tracking-tight brand-font text-white uppercase">NobelPack</h1>
-                        <p class="text-[10px] uppercase tracking-widest text-blue-400 font-bold text-nowrap">Logapont Industrial</p>
+                        <h1 class="font-bold text-xl tracking-tight brand-font text-white uppercase">LOGAPONT</h1>
+                        <p class="text-[10px] uppercase tracking-widest text-blue-400 font-bold text-nowrap">NobelPack</p>
                     </div>
                 </div>
             </div>
@@ -77,20 +77,20 @@ const App = {
                     <i data-lucide="layout-dashboard"></i>
                     <span>Painel Kanban</span>
                 </button>
-                <button onclick="App.switchView('movimentacoes')" id="nav-movimentacoes" class="nav-btn" title="Movimentações">
+                <button onclick="App.switchView('movimentacoes')" id="nav-movimentacoes" class="nav-btn" title="Histórico de Movimentações">
                     <i data-lucide="list"></i>
                     <span>Movimentações</span>
                 </button>
-                <button onclick="App.switchView('indicadores')" id="nav-indicadores" class="nav-btn" title="Indicadores">
+                <button onclick="App.switchView('indicadores')" id="nav-indicadores" class="nav-btn" title="Indicadores de BI">
                     <i data-lucide="bar-chart-3"></i>
                     <span>Indicadores</span>
                 </button>
-                <button onclick="App.switchView('produtos')" id="nav-produtos" class="nav-btn" title="Produtos">
+                <button onclick="App.switchView('produtos')" id="nav-produtos" class="nav-btn" title="Gestão de Produtos">
                     <i data-lucide="box"></i>
                     <span>Produtos</span>
                 </button>
                 ${this.user.perfil === 'ADMIN' ? `
-                <button onclick="App.switchView('admin')" id="nav-admin" class="nav-btn" title="Administração">
+                <button onclick="App.switchView('admin')" id="nav-admin" class="nav-btn" title="Gestão de Usuários">
                     <i data-lucide="shield-check"></i>
                     <span>Administração</span>
                 </button>
@@ -117,7 +117,7 @@ const App = {
                     </button>
                 </div>
 
-                <div class="pt-2 text-center">
+                <div class="pt-2 text-center border-t border-slate-800/50">
                     <span class="text-[9px] font-bold uppercase tracking-widest text-slate-600">v1.0.0-beta</span>
                 </div>
             </div>
@@ -136,17 +136,23 @@ const App = {
                 </button>
                 <h2 id="view-title" class="text-lg font-semibold brand-font">Painel Operacional</h2>
             </div>
+
             <div class="flex items-center gap-4">
+                <!-- Botão Nova Movimentação (Restaurado) -->
+                <button onclick="KanbanModule.openNovaMovModal()" class="btn btn-primary h-10 px-6 hidden md:flex">
+                    <i data-lucide="plus"></i> Nova Movimentação
+                </button>
+
+                <!-- Atalho Mobile -->
+                <button onclick="KanbanModule.openNovaMovModal()" class="md:hidden p-2 bg-blue-600 text-white rounded-lg shadow-lg">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                </button>
+
+                <div class="h-8 w-[1px] bg-gray-200 dark:bg-slate-800 mx-1"></div>
+
                 <button onclick="App.toggleTheme()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors" title="Alternar Tema">
                     <i data-lucide="${isDark ? 'sun' : 'moon'}" class="w-5 h-5"></i>
                 </button>
-                <div class="h-8 w-[1px] bg-gray-200 dark:bg-slate-800"></div>
-                <div class="flex items-center gap-3">
-                    <div class="text-right hidden sm:block">
-                        <p class="text-xs font-bold dark:text-white">${this.user.nome}</p>
-                        <p class="text-[9px] font-bold text-slate-500 uppercase">${this.user.setor}</p>
-                    </div>
-                </div>
             </div>
         `;
         lucide.createIcons();
@@ -166,7 +172,8 @@ const App = {
                 KanbanModule.render();
                 break;
             case 'movimentacoes':
-                MovimentacoesModule.render();
+                // CORREÇÃO: Usar o nome correto do módulo e método
+                MovimentacaoModule.renderList();
                 break;
             case 'indicadores':
                 IndicadoresModule.render();
