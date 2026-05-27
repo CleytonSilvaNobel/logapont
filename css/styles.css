@@ -129,18 +129,22 @@
     background-color: rgba(16, 185, 129, 0.1);
 }
 
-/* Sidebar Vertical Layout */
+/* Sidebar Vertical Layout (Padrão LogTransf) */
 .nav-btn {
     @apply flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-200;
-    @apply text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white;
+    @apply text-slate-300 hover:bg-white/10 hover:text-white;
 }
 
 .nav-btn.active {
-    @apply bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400;
+    @apply bg-blue-600 text-white shadow-lg shadow-blue-500/30;
 }
 
 .nav-btn i {
-    @apply w-5 h-5;
+    @apply w-5 h-5 text-blue-400;
+}
+
+.nav-btn.active i {
+    @apply text-white;
 }
 
 /* Sidebar Otimizada */
