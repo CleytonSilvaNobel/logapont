@@ -188,32 +188,38 @@ const IndicadoresModule = {
     },
 
     renderCharts(movs) {
-        const dailyData = {};
+        const dailyConcluidos = {};
         const dailyRejections = {};
 
         movs.forEach(m => {
-            // REGRA: Apenas paletes que concluíram o ciclo (FINALIZADO)
-            if (m.fluxo?.etapa !== 'FINALIZADO') return;
-
-            const dateStr = new Date(m.timestamps?.criacao?.toDate ? m.timestamps.criacao.toDate() : m.timestamps?.criacao).toLocaleDateString('pt-BR');
             const pals = parseInt(m.quantidade?.paletes || 0);
 
-            dailyData[dateStr] = (dailyData[dateStr] || 0) + pals;
+            // 1. Lógica para CONCLUÍDOS (Apenas FINALIZADO) - Usa data de criação/referência
+            if (m.fluxo?.etapa === 'FINALIZADO') {
+                const dateConclusao = new Date(m.timestamps?.criacao?.toDate ? m.timestamps.criacao.toDate() : m.timestamps?.criacao).toLocaleDateString('pt-BR');
+                dailyConcluidos[dateConclusao] = (dailyConcluidos[dateConclusao] || 0) + pals;
+            }
 
-            // Rejeições também devem ser consideradas apenas se ocorreram (mesmo que finalizadas depois)
-            if (m.historico?.some(h => h.acao === 'REPROVADO_QUALIDADE')) {
-                dailyRejections[dateStr] = (dailyRejections[dateStr] || 0) + pals;
+            // 2. Lógica para REPROVADOS (Independe de estar finalizado) - Usa data exata da reprovação
+            const hReprovado = (m.historico || []).find(h => h.acao === 'REPROVADO_QUALIDADE');
+            if (hReprovado) {
+                const dateReprovacao = new Date(hReprovado.data).toLocaleDateString('pt-BR');
+                dailyRejections[dateReprovacao] = (dailyRejections[dateReprovacao] || 0) + pals;
             }
         });
 
-        const labels = Object.keys(dailyData).sort((a, b) => {
+        // Garantir que os labels contenham datas de ambos para manter o eixo X sincronizado
+        const allDates = new Set([...Object.keys(dailyConcluidos), ...Object.keys(dailyRejections)]);
+        const labels = Array.from(allDates).sort((a, b) => {
             const [da, ma, ya] = a.split('/');
             const [db, mb, yb] = b.split('/');
             return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
         });
 
-        this.createChart('chart-paletes-dia', labels, Object.values(dailyData), 'Paletes Concluídos', '#6366f1');
+        const concluidosData = labels.map(l => dailyConcluidos[l] || 0);
         const rejectionsData = labels.map(l => dailyRejections[l] || 0);
+
+        this.createChart('chart-paletes-dia', labels, concluidosData, 'Paletes Concluídos', '#6366f1');
         this.createChart('chart-rejeicoes-dia', labels, rejectionsData, 'Paletes Reprovados', '#ef4444');
     },
 
