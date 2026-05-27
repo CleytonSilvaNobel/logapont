@@ -150,6 +150,31 @@
     white-space: nowrap;
     display: flex;
     flex-direction: column;
+    width: 260px;
+    /* Largura padrão */
+}
+
+#sidebar.collapsed {
+    width: 0;
+    padding: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#sidebar.collapsed * {
+    display: none;
+}
+
+/* Ajuste do shell quando sidebar some */
+.app-shell {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    height: 100vh;
+    transition: all 0.3s ease;
+}
+
+.sidebar-collapsed .app-shell {
+    grid-template-columns: 0 1fr;
 }
 
 /* Transitions */

@@ -81,6 +81,10 @@ const App = {
                     <i data-lucide="list"></i>
                     <span>Movimentações</span>
                 </button>
+                <button onclick="App.switchView('indicadores')" id="nav-indicadores" class="nav-btn" title="Indicadores">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span>Indicadores</span>
+                </button>
                 <button onclick="App.switchView('produtos')" id="nav-produtos" class="nav-btn" title="Produtos">
                     <i data-lucide="box"></i>
                     <span>Produtos</span>
@@ -153,6 +157,7 @@ const App = {
         if (view === 'kanban') KanbanModule.render();
         if (view === 'movimentacoes') MovimentacaoModule.renderList();
         if (view === 'produtos') ProdutosModule.render();
+        if (view === 'indicadores') IndicadoresModule.render();
         if (view === 'admin') AdminModule.render();
     },
 
