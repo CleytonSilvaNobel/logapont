@@ -37,6 +37,22 @@ const IndicadoresModule = {
                     </button>
                 </div>
 
+                <!-- Gríficos Principais -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Recebimento Diário (Paletes)</h4>
+                        <div class="h-[300px]">
+                            <canvas id="chart-paletes-dia"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Reprovações por Dia (Paletes)</h4>
+                        <div class="h-[300px]">
+                            <canvas id="chart-rejeicoes-dia"></canvas>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Cards de Lead Time -->
                 <div>
                     <h3 class="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4 ml-2">Tempo Médio por Etapa (Lead Time)</h3>
@@ -175,6 +191,70 @@ const IndicadoresModule = {
 
         // Render Lead Time Cards
         this.renderLeadTimeCards(etapaTimes);
+    },
+
+    renderCharts(movs) {
+        // Agrupar por dia
+        const dailyData = {};
+        const dailyRejections = {};
+
+        movs.forEach(m => {
+            const dateStr = new Date(m.timestamps?.criacao?.toDate ? m.timestamps.criacao.toDate() : m.timestamps?.criacao).toLocaleDateString('pt-BR');
+            const pals = parseInt(m.quantidade?.paletes || 0);
+
+            dailyData[dateStr] = (dailyData[dateStr] || 0) + pals;
+
+            if (m.historico?.some(h => h.acao === 'REPROVADO_QUALIDADE')) {
+                dailyRejections[dateStr] = (dailyRejections[dateStr] || 0) + pals;
+            }
+        });
+
+        const labels = Object.keys(dailyData).sort((a, b) => {
+            const [da, ma, ya] = a.split('/');
+            const [db, mb, yb] = b.split('/');
+            return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
+        });
+
+        // Chart 1: Paletes por Dia
+        this.createChart('chart-paletes-dia', labels, Object.values(dailyData), 'Paletes', '#6366f1');
+
+        // Chart 2: Rejeições por Dia
+        const rejectionsData = labels.map(l => dailyRejections[l] || 0);
+        this.createChart('chart-rejeicoes-dia', labels, rejectionsData, 'Paletes Reprovados', '#ef4444');
+    },
+
+    createChart(id, labels, data, label, color) {
+        const ctx = document.getElementById(id).getContext('2d');
+
+        // Destruir anterior se existir
+        if (this[`chart_${id}`]) this[`chart_${id}`].destroy();
+
+        this[`chart_${id}`] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: data,
+                    backgroundColor: color + '33',
+                    borderColor: color,
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
     },
 
     renderLeadTimeCards(times) {

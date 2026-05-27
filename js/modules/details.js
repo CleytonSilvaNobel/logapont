@@ -194,21 +194,25 @@ const DetailsModule = {
                             </div>
                             <div class="col-span-2">
                                 <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Descrição do Produto</label>
-                                <input type="text" id="new-prod-desc" class="form-input" placeholder="Aguardando código...">
+                                <input type="text" id="new-prod-desc" class="form-input bg-slate-50 dark:bg-slate-800" placeholder="Aproxime ou digite o código..." readonly>
                             </div>
                         </div>
-                        <div class="grid grid-cols-3 gap-4">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
                                 <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Qtd Caixas</label>
                                 <input type="number" id="new-qty-cx" class="form-input" value="0" oninput="DetailsModule.calculateTotal()">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Unid / Caixa</label>
-                                <input type="number" id="new-unid-cx" class="form-input bg-slate-50 dark:bg-slate-800" value="1" oninput="DetailsModule.calculateTotal()">
+                                <input type="number" id="new-unid-cx" class="form-input bg-slate-50 dark:bg-slate-800" value="1" readonly>
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Total Unidades</label>
                                 <input type="number" id="new-qty-un" class="form-input bg-slate-50 dark:bg-slate-800 font-bold text-indigo-600" value="0" readonly>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-1 block font-bold">Total Paletes</label>
+                                <input type="number" id="new-qty-pal" class="form-input border-indigo-200 dark:border-indigo-500/30 font-bold" value="1">
                             </div>
                         </div>
                         <div>
@@ -254,6 +258,7 @@ const DetailsModule = {
         const prodId = document.getElementById('new-prod-id').value;
         const cx = parseInt(document.getElementById('new-qty-cx').value);
         const un = parseInt(document.getElementById('new-qty-un').value);
+        const pal = parseInt(document.getElementById('new-qty-pal').value) || 0;
         const priority = document.getElementById('new-priority').value;
 
         if (!desc || cx <= 0) return Utils.notify('Preencha a descrição e a quantidade.', 'warning');
@@ -267,7 +272,7 @@ const DetailsModule = {
 
             await MovimentacaoService.create({
                 produto: { id: prodId, descricao: desc },
-                quantidade: { caixas: cx, unidades: un },
+                quantidade: { caixas: cx, unidades: un, paletes: pal },
                 prioridade: priority
             });
 

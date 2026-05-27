@@ -132,6 +132,10 @@ const KanbanModule = {
                     <i data-lucide="layers" class="w-3 h-3 text-slate-400"></i>
                     ${mov.quantidade?.unidades || 0} un
                 </div>
+                <div class="flex items-center gap-1 px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/10 rounded-md text-indigo-600 dark:text-indigo-400">
+                    <i data-lucide="truck" class="w-3 h-3"></i>
+                    ${mov.quantidade?.paletes || 0} pal
+                </div>
             </div>
 
             <div class="mt-4 pt-3 border-t border-slate-50 dark:border-slate-700 flex justify-between items-center">
