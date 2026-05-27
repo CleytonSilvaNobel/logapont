@@ -91,7 +91,7 @@ const IndicadoresModule = {
                 <!-- Gríficos Principais -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
-                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Recebimento Diário (Paletes)</h4>
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6" id="label-chart-concluidos">Concluídos Diários (Paletes)</h4>
                         <div class="h-[300px]">
                             <canvas id="chart-paletes-dia"></canvas>
                         </div>
@@ -171,12 +171,17 @@ const IndicadoresModule = {
             }
         });
 
-        document.getElementById('total-em-processo').innerText = totalEmProcessoPaletes;
-        document.getElementById('total-rejeitado').innerText = totalRejeitadoPaletes;
-        document.getElementById('total-concluidos-paletes').innerText = totalConcluidosPaletes;
+        const elProcesso = document.getElementById('total-em-processo');
+        const elRejeitado = document.getElementById('total-rejeitado');
+        const elConcluidos = document.getElementById('total-concluidos-paletes');
+        const elCiclo = document.getElementById('ciclo-medio');
 
-        if (totalCicloCount > 0) {
-            document.getElementById('ciclo-medio').innerText = this.formatDuration(totalCicloMs / totalCicloCount / 1000 / 60);
+        if (elProcesso) elProcesso.innerText = totalEmProcessoPaletes;
+        if (elRejeitado) elRejeitado.innerText = totalRejeitadoPaletes;
+        if (elConcluidos) elConcluidos.innerText = totalConcluidosPaletes;
+
+        if (elCiclo && totalCicloCount > 0) {
+            elCiclo.innerText = this.formatDuration(totalCicloMs / totalCicloCount / 1000 / 60);
         }
 
         this.renderLeadTimeCards(etapaTimes);
@@ -187,9 +192,15 @@ const IndicadoresModule = {
         const dailyRejections = {};
 
         movs.forEach(m => {
+            // REGRA: Apenas paletes que concluíram o ciclo (FINALIZADO)
+            if (m.fluxo?.etapa !== 'FINALIZADO') return;
+
             const dateStr = new Date(m.timestamps?.criacao?.toDate ? m.timestamps.criacao.toDate() : m.timestamps?.criacao).toLocaleDateString('pt-BR');
             const pals = parseInt(m.quantidade?.paletes || 0);
+
             dailyData[dateStr] = (dailyData[dateStr] || 0) + pals;
+
+            // Rejeições também devem ser consideradas apenas se ocorreram (mesmo que finalizadas depois)
             if (m.historico?.some(h => h.acao === 'REPROVADO_QUALIDADE')) {
                 dailyRejections[dateStr] = (dailyRejections[dateStr] || 0) + pals;
             }
@@ -201,13 +212,15 @@ const IndicadoresModule = {
             return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
         });
 
-        this.createChart('chart-paletes-dia', labels, Object.values(dailyData), 'Paletes', '#6366f1');
+        this.createChart('chart-paletes-dia', labels, Object.values(dailyData), 'Paletes Concluídos', '#6366f1');
         const rejectionsData = labels.map(l => dailyRejections[l] || 0);
         this.createChart('chart-rejeicoes-dia', labels, rejectionsData, 'Paletes Reprovados', '#ef4444');
     },
 
     createChart(id, labels, data, label, color) {
-        const ctx = document.getElementById(id).getContext('2d');
+        const canvas = document.getElementById(id);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
         if (this[`chart_${id}`]) this[`chart_${id}`].destroy();
         this[`chart_${id}`] = new Chart(ctx, {
             type: 'bar',
@@ -237,6 +250,7 @@ const IndicadoresModule = {
 
     renderLeadTimeCards(times) {
         const container = document.getElementById('lead-time-cards');
+        if (!container) return;
         const etapas = Object.keys(times);
         container.innerHTML = etapas.map(etapa => {
             const values = times[etapa];
