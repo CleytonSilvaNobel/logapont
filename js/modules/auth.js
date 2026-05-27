@@ -120,5 +120,37 @@ const AuthModule = {
             await FB.auth.signOut();
             location.reload();
         }
+    },
+
+    async changePassword() {
+        const user = FB.auth.currentUser;
+        if (!user) return;
+
+        const newPass = prompt('Digite sua nova senha (mínimo 6 caracteres):');
+        if (!newPass) return;
+        if (newPass.length < 6) return Utils.notify('A senha deve ter pelo menos 6 caracteres.', 'warning');
+
+        try {
+            Utils.notify('Atualizando senha...', 'info');
+            await user.updatePassword(newPass);
+            Utils.notify('Senha alterada com sucesso!', 'success');
+        } catch (error) {
+            console.error(error);
+            if (error.code === 'auth/requires-recent-login') {
+                Utils.notify('Para trocar a senha, você precisa ter logado recentemente. Saia e entre novamente.', 'danger');
+            } else {
+                Utils.notify('Erro ao alterar senha: ' + error.message, 'danger');
+            }
+        }
+    },
+
+    async sendResetEmail(email) {
+        try {
+            await FB.auth.sendPasswordResetEmail(email);
+            Utils.notify('E-mail de redefinição enviado com sucesso!', 'success');
+        } catch (error) {
+            console.error(error);
+            Utils.notify('Erro ao enviar e-mail: ' + error.message, 'danger');
+        }
     }
 };

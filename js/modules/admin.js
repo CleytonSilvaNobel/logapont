@@ -77,6 +77,9 @@ const AdminModule = {
                         <button onclick="AdminModule.openUserModal('${user.id}')" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all" title="Editar">
                             <i data-lucide="edit-3" class="w-4 h-4"></i>
                         </button>
+                        <button onclick="AuthModule.sendResetEmail('${user.email}')" class="p-2 text-slate-400 hover:text-amber-600 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all" title="Redefinir Senha (E-mail)">
+                            <i data-lucide="mail-warning" class="w-4 h-4"></i>
+                        </button>
                         <button onclick="AdminModule.deleteUser('${user.id}', '${user.nome}')" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all" title="Excluir">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>

@@ -106,9 +106,14 @@ const App = {
                         <p class="text-sm font-semibold truncate">${this.user.nome}</p>
                         <p class="text-[10px] text-slate-500 uppercase font-bold truncate">${this.user.setor}</p>
                     </div>
-                    <button onclick="AuthModule.logout()" class="p-2 text-slate-400 hover:text-danger transition-colors flex-shrink-0" title="Sair">
-                        <i data-lucide="log-out" class="w-5 h-5"></i>
-                    </button>
+                    <div class="flex items-center gap-1">
+                        <button onclick="AuthModule.changePassword()" class="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors" title="Alterar Minha Senha">
+                            <i data-lucide="key-round" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="AuthModule.logout()" class="p-1.5 text-slate-400 hover:text-danger transition-colors flex-shrink-0" title="Sair">
+                            <i data-lucide="log-out" class="w-5 h-5"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         `;

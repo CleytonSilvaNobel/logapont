@@ -50,11 +50,11 @@ const IndicadoresModule = {
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
                         <div class="flex justify-between items-start mb-4">
                             <div class="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl text-indigo-600">
-                                <i data-lucide="archive"></i>
+                                <i data-lucide="truck"></i>
                             </div>
                         </div>
-                        <h4 class="text-3xl font-bold dark:text-white" id="total-finalizado">0</h4>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter mt-1">Concluidos no Período</p>
+                        <h4 class="text-3xl font-bold dark:text-white" id="total-em-processo">0</h4>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter mt-1">Paletes em Processo</p>
                     </div>
 
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
@@ -83,12 +83,12 @@ const IndicadoresModule = {
                                 <i data-lucide="package-check"></i>
                             </div>
                         </div>
-                        <h4 class="text-3xl font-bold dark:text-white" id="total-paletes">0</h4>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter mt-1">Total Paletes Recebidos</p>
+                        <h4 class="text-3xl font-bold dark:text-white" id="total-concluidos-paletes">0</h4>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter mt-1">Total Paletes Concluídos</p>
                     </div>
                 </div>
 
-                <!-- Gríficos Principais (AGORA NO FINAL) -->
+                <!-- Gríficos Principais -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
                         <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Recebimento Diário (Paletes)</h4>
@@ -134,8 +134,8 @@ const IndicadoresModule = {
     },
 
     calculateMetrics(movs) {
-        let totalFinalizado = 0;
-        let totalRecebidoPaletes = 0;
+        let totalConcluidosPaletes = 0;
+        let totalEmProcessoPaletes = 0;
         let totalRejeitadoPaletes = 0;
         let totalCicloMs = 0;
         let totalCicloCount = 0;
@@ -146,9 +146,12 @@ const IndicadoresModule = {
 
         movs.forEach(m => {
             const paletes = parseInt(m.quantidade?.paletes || 0);
-            totalRecebidoPaletes += paletes;
 
-            if (m.fluxo?.etapa === 'FINALIZADO') totalFinalizado++;
+            if (m.fluxo?.etapa === 'FINALIZADO') {
+                totalConcluidosPaletes += paletes;
+            } else {
+                totalEmProcessoPaletes += paletes;
+            }
 
             if (m.historico?.some(h => h.acao === 'REPROVADO_QUALIDADE')) {
                 totalRejeitadoPaletes += paletes;
@@ -168,9 +171,9 @@ const IndicadoresModule = {
             }
         });
 
-        document.getElementById('total-finalizado').innerText = totalFinalizado;
+        document.getElementById('total-em-processo').innerText = totalEmProcessoPaletes;
         document.getElementById('total-rejeitado').innerText = totalRejeitadoPaletes;
-        document.getElementById('total-paletes').innerText = totalRecebidoPaletes;
+        document.getElementById('total-concluidos-paletes').innerText = totalConcluidosPaletes;
 
         if (totalCicloCount > 0) {
             document.getElementById('ciclo-medio').innerText = this.formatDuration(totalCicloMs / totalCicloCount / 1000 / 60);
