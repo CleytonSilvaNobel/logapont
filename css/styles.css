@@ -83,7 +83,7 @@
     @apply bg-danger text-white hover:bg-red-600 shadow-lg shadow-red-500/20;
 }
 
-/* Kanban Column Colors (Subtle & Semantic) */
+/* Kanban Column Colors */
 .col-bg-qualidade {
     background-color: rgba(99, 102, 241, 0.05);
     border-top: 4px solid #6366f1;
@@ -131,22 +131,47 @@
 
 /* Sidebar Vertical Layout (Padrão LogTransf) */
 .nav-btn {
-    @apply flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300;
-    @apply text-slate-300 hover:bg-white/10 hover:text-white hover:translate-x-1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    color: #cbd5e1;
+    /* slate-300 */
+    cursor: pointer;
+    border: none;
+    background: transparent;
+}
+
+.nav-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    transform: translateX(4px);
 }
 
 .nav-btn.active {
     background-color: #2563eb !important;
     /* Azul Vivo NobelPack */
-    @apply text-white shadow-lg shadow-blue-500/40 translate-x-1;
+    color: #ffffff;
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+    transform: translateX(4px);
 }
 
 .nav-btn i {
-    @apply w-5 h-5 text-blue-400 transition-colors duration-300;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #60a5fa;
+    /* blue-400 */
+    transition: color 0.3s ease;
 }
 
+.nav-btn:hover i,
 .nav-btn.active i {
-    @apply text-white;
+    color: #ffffff;
 }
 
 /* Sidebar Otimizada */
@@ -157,7 +182,6 @@
     display: flex;
     flex-direction: column;
     width: 260px;
-    /* Largura padrão */
 }
 
 #sidebar.collapsed {
