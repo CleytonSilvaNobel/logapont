@@ -4,13 +4,17 @@
 
 const DetailsModule = {
     async open(movId) {
-        const movRef = window.firebase.doc(FB.db, 'movimentacoes', movId);
-        const docSnap = await window.firebase.getDoc(movRef);
+        try {
+            const docSnap = await FB.db.collection('movimentacoes').doc(movId).get();
 
-        if (!docSnap.exists()) return Utils.notify('Movimentação não encontrada.', 'danger');
+            if (!docSnap.exists) return Utils.notify('Movimentação não encontrada.', 'danger');
 
-        const mov = docSnap.data();
-        this.renderModal(mov);
+            const mov = docSnap.data();
+            this.renderModal({ id: docSnap.id, ...mov });
+        } catch (e) {
+            console.error(e);
+            Utils.notify('Erro ao abrir detalhes.', 'danger');
+        }
     },
 
     renderModal(mov) {
@@ -35,11 +39,11 @@ const DetailsModule = {
                                 <div class="grid grid-cols-2 gap-6">
                                     <div class="col-span-2">
                                         <label class="text-[10px] uppercase font-bold text-slate-500">Descrição</label>
-                                        <p class="font-semibold text-lg">${mov.produto?.descricao}</p>
+                                        <p class="font-semibold text-lg text-slate-800 dark:text-slate-100">${mov.produto?.descricao}</p>
                                     </div>
                                     <div>
                                         <label class="text-[10px] uppercase font-bold text-slate-500">Código</label>
-                                        <p class="font-semibold text-indigo-600">${mov.produto?.id || '-'}</p>
+                                        <p class="font-bold text-indigo-600">${mov.produto?.id || '-'}</p>
                                     </div>
                                     <div>
                                         <label class="text-[10px] uppercase font-bold text-slate-500">Quantidade</label>
@@ -148,14 +152,21 @@ const DetailsModule = {
     },
 
     async updateFlow(movId, nextEtapa, situacao, acao, obs = '') {
+        const modal = document.querySelector('.animate-fade-in > div');
         try {
-            const movRef = window.firebase.doc(FB.db, 'movimentacoes', movId);
-            const doc = await window.firebase.getDoc(movRef);
-            const current = doc.data();
+            if (modal) modal.style.opacity = '0.5';
+            Utils.notify('Atualizando etapa...', 'info');
+
+            const docSnap = await FB.db.collection('movimentacoes').doc(movId).get();
+            const current = docSnap.data();
 
             await MovimentacaoService.updateStatus(movId, current.fluxo, { etapa: nextEtapa, situacao }, acao, obs);
             this.close();
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+            Utils.notify('Falha ao atualizar etapa.', 'danger');
+            if (modal) modal.style.opacity = '1';
+        }
     },
 
     reprovar(movId) {
@@ -232,10 +243,13 @@ const DetailsModule = {
     calculateTotal() {
         const cx = parseInt(document.getElementById('new-qty-cx').value) || 0;
         const unidCx = parseInt(document.getElementById('new-unid-cx').value) || 1;
-        document.getElementById('new-qty-un').value = cx * unidCx;
+        const total = cx * unidCx;
+        const input = document.getElementById('new-qty-un');
+        if (input) input.value = total;
     },
 
     async handleCreate() {
+        const btn = document.querySelector('[onclick="DetailsModule.handleCreate()"]');
         const desc = document.getElementById('new-prod-desc').value;
         const prodId = document.getElementById('new-prod-id').value;
         const cx = parseInt(document.getElementById('new-qty-cx').value);
@@ -245,14 +259,29 @@ const DetailsModule = {
         if (!desc || cx <= 0) return Utils.notify('Preencha a descrição e a quantidade.', 'warning');
 
         try {
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Criando...`;
+                lucide.createIcons();
+            }
+
             await MovimentacaoService.create({
                 produto: { id: prodId, descricao: desc },
                 quantidade: { caixas: cx, unidades: un },
                 prioridade: priority
             });
+
             Utils.notify('Nova MOV criada com sucesso!');
             this.close();
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+            Utils.notify('Erro ao criar movimentação.', 'danger');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `Criar Movimentação`;
+                lucide.createIcons();
+            }
+        }
     },
 
     close() { document.getElementById('modal-container').innerHTML = ''; }
