@@ -138,13 +138,13 @@ const App = {
             </div>
 
             <div class="flex items-center gap-4">
-                <!-- Botão Nova Movimentação (Restaurado) -->
-                <button onclick="KanbanModule.openNovaMovModal()" class="btn btn-primary h-10 px-6 hidden md:flex">
+                <!-- Botão Nova Movimentação (Corrigido) -->
+                <button onclick="KanbanModule.openNewMovementModal()" class="btn btn-primary h-10 px-6 hidden md:flex">
                     <i data-lucide="plus"></i> Nova Movimentação
                 </button>
 
                 <!-- Atalho Mobile -->
-                <button onclick="KanbanModule.openNovaMovModal()" class="md:hidden p-2 bg-blue-600 text-white rounded-lg shadow-lg">
+                <button onclick="KanbanModule.openNewMovementModal()" class="md:hidden p-2 bg-blue-600 text-white rounded-lg shadow-lg">
                     <i data-lucide="plus" class="w-5 h-5"></i>
                 </button>
 
