@@ -41,6 +41,14 @@ const AdminModule = {
                                 </div>
                             </div>
                         </div>
+
+                        <div class="pt-6 border-t border-slate-100 dark:border-slate-800">
+                             <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Manutenção de Dados</h4>
+                             <button onclick="AdminModule.clearData()" class="w-full btn btn-danger py-3 text-sm">
+                                <i data-lucide="refresh-cw"></i> Zerar Base de Testes
+                             </button>
+                             <p class="text-[10px] text-slate-400 mt-2 text-center">⚠️ Esta ação removerá todas as MOVs e resetará o contador.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -138,6 +146,32 @@ const AdminModule = {
             this.render();
         } catch (e) {
             console.error(e);
+        }
+    },
+
+    async clearData() {
+        if (!confirm('!!! ATENÇÃO !!!\n\nIsso irá apagar TODAS as movimentações do sistema e resetar a numeração para MOV-000001.\n\nTem certeza absoluta?')) return;
+
+        const senha = prompt('Digite a senha de segurança (admin) para confirmar:');
+        if (senha !== 'admin') return Utils.notify('Senha incorreta. Operação cancelada.', 'danger');
+
+        try {
+            Utils.notify('Iniciando limpeza...', 'warning');
+
+            // 1. Limpar Movimentações
+            const movs = await Store.list('movimentacoes');
+            for (const m of movs) {
+                await Store.delete('movimentacoes', m.id);
+            }
+
+            // 2. Resetar Contador
+            await Store.update('counters', 'movimentacoes', { valor: 0 });
+
+            Utils.notify('Base de dados zerada com sucesso!', 'success');
+            App.switchView('kanban');
+        } catch (error) {
+            console.error(error);
+            Utils.notify('Falha ao zerar base.', 'danger');
         }
     }
 };

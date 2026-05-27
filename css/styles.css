@@ -83,34 +83,73 @@
     @apply bg-danger text-white hover:bg-red-600 shadow-lg shadow-red-500/20;
 }
 
+/* Kanban Column Colors (Subtle & Semantic) */
+.col-bg-qualidade {
+    background-color: rgba(99, 102, 241, 0.05);
+    border-top: 4px solid #6366f1;
+}
+
+.col-bg-retrabalho {
+    background-color: rgba(245, 158, 11, 0.05);
+    border-top: 4px solid #f59e0b;
+}
+
+.col-bg-logistica {
+    background-color: rgba(59, 130, 246, 0.05);
+    border-top: 4px solid #3b82f6;
+}
+
+.col-bg-pcp {
+    background-color: rgba(100, 116, 139, 0.05);
+    border-top: 4px solid #64748b;
+}
+
+.col-bg-armazenagem {
+    background-color: rgba(16, 185, 129, 0.05);
+    border-top: 4px solid #10b981;
+}
+
+.dark .col-bg-qualidade {
+    background-color: rgba(99, 102, 241, 0.1);
+}
+
+.dark .col-bg-retrabalho {
+    background-color: rgba(245, 158, 11, 0.1);
+}
+
+.dark .col-bg-logistica {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.dark .col-bg-pcp {
+    background-color: rgba(100, 116, 139, 0.1);
+}
+
+.dark .col-bg-armazenagem {
+    background-color: rgba(16, 185, 129, 0.1);
+}
+
+/* Sidebar Vertical Layout */
+.nav-btn {
+    @apply flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-200;
+    @apply text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white;
+}
+
+.nav-btn.active {
+    @apply bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400;
+}
+
+.nav-btn i {
+    @apply w-5 h-5;
+}
+
 /* Sidebar Otimizada */
 #sidebar {
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-x: hidden;
     white-space: nowrap;
-}
-
-#sidebar.collapsed {
-    width: 0;
-    padding: 0;
-    opacity: 0;
-    pointer-events: none;
-}
-
-#sidebar.collapsed * {
-    display: none;
-}
-
-/* Ajuste do shell quando sidebar some */
-.app-shell {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    height: 100vh;
-    transition: all 0.3s ease;
-}
-
-.sidebar-collapsed .app-shell {
-    grid-template-columns: 0 1fr;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Transitions */

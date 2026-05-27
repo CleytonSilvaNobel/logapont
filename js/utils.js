@@ -9,32 +9,33 @@ const Utils = {
     notify(message, type = 'success') {
         const toast = document.createElement('div');
         toast.className = `fixed bottom-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-2xl transition-all duration-300 transform translate-y-10 opacity-0 flex items-center gap-2 text-white`;
-        
+
         const colors = {
             success: 'bg-emerald-500',
             warning: 'bg-amber-500',
             danger: 'bg-red-500',
-            info: 'bg-indigo-500'
+            info: 'bg-indigo-500',
+            indigo: 'bg-indigo-600'
         };
-        
+
         const icons = {
             success: 'check-circle',
             warning: 'alert-triangle',
             danger: 'x-circle',
             info: 'info'
         };
-        
+
         toast.classList.add(colors[type] || colors.info);
         toast.innerHTML = `<i data-lucide="${icons[type] || icons.info}" class="w-5 h-5"></i><span>${message}</span>`;
-        
+
         document.body.appendChild(toast);
         lucide.createIcons({ props: { class: 'w-5 h-5' } });
-        
+
         // Show
         setTimeout(() => {
             toast.classList.remove('translate-y-10', 'opacity-0');
         }, 10);
-        
+
         // Hide and Remove
         setTimeout(() => {
             toast.classList.add('translate-y-10', 'opacity-0');
@@ -62,15 +63,15 @@ const Utils = {
      */
     getSLATime(creationDate) {
         if (!creationDate) return { text: '-', color: 'text-slate-400' };
-        
+
         const start = new Date(creationDate);
         const now = new Date();
         const diffMs = now - start;
         const diffMins = Math.floor(diffMs / 60000);
-        
+
         if (diffMins < 60) return { text: `${diffMins}min`, color: 'text-emerald-500', code: 'safe' };
-        if (diffMins < 120) return { text: `${Math.floor(diffMins/60)}h ${diffMins%60}min`, color: 'text-amber-500', code: 'warning' };
-        return { text: `${Math.floor(diffMins/60)}h ${diffMins%60}min`, color: 'text-red-500', code: 'danger' };
+        if (diffMins < 120) return { text: `${Math.floor(diffMins / 60)}h ${diffMins % 60}min`, color: 'text-amber-500', code: 'warning' };
+        return { text: `${Math.floor(diffMins / 60)}h ${diffMins % 60}min`, color: 'text-red-500', code: 'danger' };
     },
 
     /**

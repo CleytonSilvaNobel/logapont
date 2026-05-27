@@ -4,20 +4,46 @@
 
 const KanbanModule = {
     columns: [
-        { id: 'QUALIDADE', label: 'Qualidade' },
-        { id: 'RETRABALHO', label: 'Retrabalho' },
-        { id: 'LOGISTICA', label: 'Logística' },
-        { id: 'PCP', label: 'PCP' },
-        { id: 'ARMAZENAGEM', label: 'Armazenagem' }
+        { id: 'QUALIDADE', label: 'Qualidade', bg: 'col-bg-qualidade' },
+        { id: 'RETRABALHO', label: 'Retrabalho', bg: 'col-bg-retrabalho' },
+        { id: 'LOGISTICA', label: 'Logística', bg: 'col-bg-logistica' },
+        { id: 'PCP', label: 'PCP', bg: 'col-bg-pcp' },
+        { id: 'ARMAZENAGEM', label: 'Armazenagem', bg: 'col-bg-armazenagem' }
     ],
 
     init() {
-        // Escuta mudanças nas movimentações
+        let firstLoad = true;
         this.unsubscribe = Store.subscribe('movimentacoes', (movs) => {
+            if (!firstLoad) {
+                this.checkNewMovs(movs);
+            }
+            firstLoad = false;
+
             if (App.currentView === 'kanban') {
                 this.renderBoard(movs);
             }
         });
+    },
+
+    checkNewMovs(movs) {
+        // Pega a mais recente com base no timestamp de criação
+        const latest = movs.slice().sort((a, b) => {
+            const timeA = a.timestamps?.criacao?.seconds || 0;
+            const timeB = b.timestamps?.criacao?.seconds || 0;
+            return timeB - timeA;
+        })[0];
+
+        if (latest && latest.fluxo?.etapa === 'QUALIDADE' && latest.fluxo?.situacao === 'AGUARDANDO') {
+            const lastNotified = localStorage.getItem('lastNotifiedMov');
+            if (lastNotified !== latest.id) {
+                Utils.notify(`🔔 NOVA MOV: ${latest.idSequencial}`, 'indigo');
+                localStorage.setItem('lastNotifiedMov', latest.id);
+                try {
+                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                    audio.play();
+                } catch (e) { console.warn('Audio feedback blocked by browser'); }
+            }
+        }
     },
 
     render() {
@@ -32,7 +58,7 @@ const KanbanModule = {
                                 <span id="count-${col.id}" class="text-xs bg-slate-200 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full">0</span>
                             </h3>
                         </div>
-                        <div id="col-${col.id}" class="flex-1 space-y-4 overflow-y-auto min-h-[200px] rounded-2xl bg-slate-100/50 dark:bg-slate-900/30 p-2 border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-800 transition-all">
+                        <div id="col-${col.id}" class="flex-1 space-y-4 overflow-y-auto min-h-[200px] rounded-2xl ${col.bg} p-2 border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-800 transition-all">
                             <!-- Cards serão injetados aqui -->
                         </div>
                     </div>

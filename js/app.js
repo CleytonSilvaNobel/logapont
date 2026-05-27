@@ -72,7 +72,7 @@ const App = {
                 </div>
             </div>
 
-            <nav class="flex-1 px-4 py-4 space-y-1">
+            <nav class="flex-1 px-4 py-4 flex flex-col gap-2">
                 <button onclick="App.switchView('kanban')" id="nav-kanban" class="nav-btn active" title="Painel Kanban">
                     <i data-lucide="layout-dashboard"></i>
                     <span>Painel Kanban</span>
@@ -131,9 +131,9 @@ const App = {
                     <input type="text" placeholder="Buscar MOV ou Produto..." class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-full text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all w-64">
                     <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2"></i>
                 </div>
-                <button onclick="KanbanModule.openNewMovementModal()" class="btn btn-primary text-sm px-4">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                    <span class="hidden sm:inline">Nova MOV</span>
+                <button onclick="KanbanModule.openNewMovementModal()" class="btn btn-primary py-3 px-6 shadow-indigo-500/40">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                    <span class="hidden sm:inline font-bold">Nova Movimentação</span>
                 </button>
             </div>
         `;
