@@ -48,6 +48,9 @@ const KanbanModule = {
 
     render() {
         const mainContent = document.getElementById('main-content');
+        const viewTitle = document.getElementById('view-title');
+        if (viewTitle) viewTitle.innerText = 'Fluxo de Movimentação';
+
         mainContent.innerHTML = `
             <div id="kanban-container" class="flex gap-6 overflow-x-auto pb-6 h-full items-start">
                 ${this.columns.map(col => `

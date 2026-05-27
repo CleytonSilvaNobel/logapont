@@ -144,7 +144,18 @@ const DetailsModule = {
                     <i data-lucide="archive" class="w-5 h-5"></i> Finalizar Movimentação
                 </button>
             `);
-        } else {
+        }
+
+        // BOTAO EDITAR (Admin sempre, Arte Final se estiver em Retrabalho)
+        if (perfil === 'ADMIN' || (setor === 'ARTE_FINAL' && etapa === 'RETRABALHO')) {
+            buttons.push(`
+                <button onclick="DetailsModule.openEditModal('${mov.id}')" class="btn btn-secondary flex-1 border-indigo-200 text-indigo-600">
+                    <i data-lucide="edit-3" class="w-5 h-5"></i> Editar Lançamento
+                </button>
+            `);
+        }
+
+        if (buttons.length === 0) {
             return `<p class="text-sm text-slate-400 italic">Sem ações disponíveis para seu setor nesta etapa.</p>`;
         }
 
@@ -287,6 +298,128 @@ const DetailsModule = {
                 lucide.createIcons();
             }
         }
+    },
+
+    async openEditModal(movId) {
+        try {
+            const mov = await Store.get('movimentacoes', movId);
+            if (!mov) return;
+
+            const container = document.getElementById('modal-container');
+            // Reutiliza parte da estrutura do NewModal mas com botão de Update
+            container.innerHTML = `
+                <div class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fade-in">
+                    <div class="bg-white dark:bg-slate-900 w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-indigo-100 dark:border-indigo-500/20">
+                        <header class="p-6 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center bg-indigo-50/30 dark:bg-indigo-500/5">
+                            <div>
+                                <h3 class="text-xl font-bold brand-font text-indigo-600">Editar Lançamento</h3>
+                                <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">${mov.idSequencial}</p>
+                            </div>
+                            <button onclick="DetailsModule.closeEdit()" class="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-colors">
+                                <i data-lucide="x" class="w-6 h-6"></i>
+                            </button>
+                        </header>
+                        <div class="p-8 space-y-4">
+                            <input type="hidden" id="edit-mov-id" value="${mov.id}">
+                            <div class="grid grid-cols-1 gap-4">
+                                <div>
+                                    <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Descrição do Produto</label>
+                                    <input type="text" id="edit-prod-desc" class="form-input bg-slate-50 dark:bg-slate-800" value="${mov.produto?.descricao}" readonly>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Qtd Caixas</label>
+                                    <input type="number" id="edit-qty-cx" class="form-input" value="${mov.quantidade?.caixas}" oninput="DetailsModule.calculateTotalEdit()">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Unid / Caixa</label>
+                                    <input type="number" id="edit-unid-cx" class="form-input bg-slate-50 dark:bg-slate-800" value="${mov.quantidade?.unidades / mov.quantidade?.caixas}" readonly>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Total Unidades</label>
+                                    <input type="number" id="edit-qty-un" class="form-input bg-slate-50 dark:bg-slate-800 font-bold text-indigo-600" value="${mov.quantidade?.unidades}" readonly>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-1 block font-bold">Total Paletes</label>
+                                    <input type="number" id="edit-qty-pal" class="form-input border-indigo-200 dark:border-indigo-500/30 font-bold" value="${mov.quantidade?.paletes || 0}">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Prioridade</label>
+                                <select id="edit-priority" class="form-input">
+                                    <option value="NORMAL" ${mov.prioridade === 'NORMAL' ? 'selected' : ''}>NORMAL</option>
+                                    <option value="ALTA" ${mov.prioridade === 'ALTA' ? 'selected' : ''}>ALTA</option>
+                                    <option value="URGENTE" ${mov.prioridade === 'URGENTE' ? 'selected' : ''}>URGENTE</option>
+                                </select>
+                            </div>
+                            <button onclick="DetailsModule.handleUpdate()" class="w-full btn btn-primary py-4 mt-4 shadow-xl shadow-indigo-500/20" id="btn-update-mov">
+                                Salvar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        } catch (e) {
+            console.error(e);
+            Utils.notify('Erro ao abrir edição.', 'danger');
+        }
+    },
+
+    calculateTotalEdit() {
+        const cx = parseInt(document.getElementById('edit-qty-cx').value) || 0;
+        const unidCx = parseInt(document.getElementById('edit-unid-cx').value) || 1;
+        document.getElementById('edit-qty-un').value = cx * unidCx;
+    },
+
+    async handleUpdate() {
+        const id = document.getElementById('edit-mov-id').value;
+        const cx = parseInt(document.getElementById('edit-qty-cx').value);
+        const un = parseInt(document.getElementById('edit-qty-un').value);
+        const pal = parseInt(document.getElementById('edit-qty-pal').value);
+        const priority = document.getElementById('edit-priority').value;
+        const btn = document.getElementById('btn-update-mov');
+
+        try {
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Salvando...`;
+            lucide.createIcons();
+
+            await Store.update('movimentacoes', id, {
+                'quantidade.caixas': cx,
+                'quantidade.unidades': un,
+                'quantidade.paletes': pal,
+                'prioridade': priority
+            });
+
+            // Registrar no histórico a edição
+            const mov = await Store.get('movimentacoes', id);
+            await FB.db.collection('movimentacoes').doc(id).update({
+                historico: firebase.firestore.FieldValue.arrayUnion({
+                    data: new Date().toISOString(),
+                    acao: 'EDIÇÃO_MANUAL',
+                    usuario: App.user,
+                    para: mov.fluxo,
+                    observacao: 'Dados de quantidade/prioridade alterados via edição manual.'
+                })
+            });
+
+            Utils.notify('Lançamento atualizado com sucesso!', 'success');
+            this.closeEdit();
+            this.open(id); // Recarregar detalhes
+        } catch (e) {
+            console.error(e);
+            Utils.notify('Erro ao atualizar.', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = 'Salvar Alterações';
+        }
+    },
+
+    closeEdit() {
+        // Apenas limpa o modal de edição se houver sobreposição, mas aqui vamos re-renderizar o de detalhes
+        const id = document.getElementById('edit-mov-id').value;
+        if (id) this.open(id);
     },
 
     close() { document.getElementById('modal-container').innerHTML = ''; }

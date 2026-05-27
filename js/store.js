@@ -102,5 +102,18 @@ const Store = {
      */
     async runTransaction(fn) {
         return FB.db.runTransaction(fn);
+    },
+
+    /**
+     * Remove um documento pelo ID
+     */
+    async delete(collectionName, id) {
+        try {
+            await FB.db.collection(collectionName).doc(id).delete();
+            return true;
+        } catch (error) {
+            console.error('Erro ao deletar documento:', error);
+            throw error;
+        }
     }
 };

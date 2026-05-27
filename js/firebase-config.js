@@ -19,6 +19,7 @@ firebase.initializeApp(firebaseConfig);
 
 // Referências globais
 const FB = {
+    config: firebaseConfig,
     auth: firebase.auth(),
     db: firebase.firestore()
 };

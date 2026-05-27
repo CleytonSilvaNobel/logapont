@@ -172,6 +172,7 @@ const AdminModule = {
 
             if (!id) {
                 // NOVO USUÁRIO: Provisionar no Firebase Auth
+                // Usamos FB.config global definido em firebase-config.js
                 const tempApp = window.firebase.initializeApp(FB.config, 'tempAuth' + Date.now());
                 try {
                     await tempApp.auth().createUserWithEmailAndPassword(email, password);

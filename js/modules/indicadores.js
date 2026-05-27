@@ -37,22 +37,6 @@ const IndicadoresModule = {
                     </button>
                 </div>
 
-                <!-- Gríficos Principais -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
-                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Recebimento Diário (Paletes)</h4>
-                        <div class="h-[300px]">
-                            <canvas id="chart-paletes-dia"></canvas>
-                        </div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
-                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Reprovações por Dia (Paletes)</h4>
-                        <div class="h-[300px]">
-                            <canvas id="chart-rejeicoes-dia"></canvas>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Cards de Lead Time -->
                 <div>
                     <h3 class="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4 ml-2">Tempo Médio por Etapa (Lead Time)</h3>
@@ -90,7 +74,7 @@ const IndicadoresModule = {
                             </div>
                         </div>
                         <h4 class="text-3xl font-bold dark:text-white" id="total-rejeitado">0</h4>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter mt-1">Rejeições (Retrabalho)</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter mt-1">Rejeições (Paletes)</p>
                     </div>
 
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
@@ -101,6 +85,22 @@ const IndicadoresModule = {
                         </div>
                         <h4 class="text-3xl font-bold dark:text-white" id="total-paletes">0</h4>
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter mt-1">Total Paletes Recebidos</p>
+                    </div>
+                </div>
+
+                <!-- Gríficos Principais (AGORA NO FINAL) -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Recebimento Diário (Paletes)</h4>
+                        <div class="h-[300px]">
+                            <canvas id="chart-paletes-dia"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Reprovações por Dia (Paletes)</h4>
+                        <div class="h-[300px]">
+                            <canvas id="chart-rejeicoes-dia"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -117,10 +117,7 @@ const IndicadoresModule = {
 
     async loadStats() {
         try {
-            // Firestore Query (Simplificada para o BI)
             const movs = await Store.list('movimentacoes');
-
-            // Filtro por Data
             const filtered = movs.filter(m => {
                 const dataCriacao = m.timestamps?.criacao?.toDate ? m.timestamps.criacao.toDate() : new Date(m.timestamps?.criacao);
                 const inicio = new Date(this.filters.inicio + 'T00:00:00');
@@ -129,6 +126,7 @@ const IndicadoresModule = {
             });
 
             this.calculateMetrics(filtered);
+            this.renderCharts(filtered);
         } catch (error) {
             console.error(error);
             Utils.notify('Erro ao carregar indicadores.', 'danger');
@@ -137,73 +135,58 @@ const IndicadoresModule = {
 
     calculateMetrics(movs) {
         let totalFinalizado = 0;
-        let totalRejeitado = 0;
+        let totalRecebidoPaletes = 0;
+        let totalRejeitadoPaletes = 0;
         let totalCicloMs = 0;
         let totalCicloCount = 0;
 
         const etapaTimes = {
-            'QUALIDADE': [],
-            'LOGISTICA': [],
-            'PCP': [],
-            'ARMAZENAGEM': [],
-            'RETRABALHO': []
+            'QUALIDADE': [], 'LOGISTICA': [], 'PCP': [], 'ARMAZENAGEM': [], 'RETRABALHO': []
         };
 
         movs.forEach(m => {
+            const paletes = parseInt(m.quantidade?.paletes || 0);
+            totalRecebidoPaletes += paletes;
+
             if (m.fluxo?.etapa === 'FINALIZADO') totalFinalizado++;
 
-            // Verifica Rejeições no Histórico
-            if (m.historico?.some(h => h.acao === 'REPROVADO_QUALIDADE')) totalRejeitado++;
-
-            // Lead Time Calculation from History
-            const hist = m.historico || [];
-            for (let i = 0; i < hist.length - 1; i++) {
-                const atual = hist[i];
-                const proximo = hist[i + 1];
-
-                const entrada = new Date(atual.data);
-                const saida = new Date(proximo.data);
-                const diff = (saida - entrada) / 1000 / 60; // em minutos
-
-                if (etapaTimes[atual.para.etapa]) {
-                    etapaTimes[atual.para.etapa].push(diff);
-                }
+            if (m.historico?.some(h => h.acao === 'REPROVADO_QUALIDADE')) {
+                totalRejeitadoPaletes += paletes;
             }
 
-            // Ciclo Total
-            if (m.fluxo?.etapa === 'FINALIZADO') {
-                const criacao = new Date(hist[0].data);
-                const finalizado = new Date(hist[hist.length - 1].data);
-                totalCicloMs += (finalizado - criacao);
+            const hist = m.historico || [];
+            for (let i = 0; i < hist.length - 1; i++) {
+                const entrada = new Date(hist[i].data);
+                const saida = new Date(hist[i + 1].data);
+                const diff = (saida - entrada) / 1000 / 60;
+                if (etapaTimes[hist[i].para.etapa]) etapaTimes[hist[i].para.etapa].push(diff);
+            }
+
+            if (m.fluxo?.etapa === 'FINALIZADO' && hist.length > 1) {
+                totalCicloMs += (new Date(hist[hist.length - 1].data) - new Date(hist[0].data));
                 totalCicloCount++;
             }
         });
 
-        // Update Totals
         document.getElementById('total-finalizado').innerText = totalFinalizado;
-        document.getElementById('total-rejeitado').innerText = totalRejeitado;
-        document.getElementById('total-paletes').innerText = movs.length;
+        document.getElementById('total-rejeitado').innerText = totalRejeitadoPaletes;
+        document.getElementById('total-paletes').innerText = totalRecebidoPaletes;
 
         if (totalCicloCount > 0) {
-            const avgMs = totalCicloMs / totalCicloCount;
-            document.getElementById('ciclo-medio').innerText = this.formatDuration(avgMs / 1000 / 60);
+            document.getElementById('ciclo-medio').innerText = this.formatDuration(totalCicloMs / totalCicloCount / 1000 / 60);
         }
 
-        // Render Lead Time Cards
         this.renderLeadTimeCards(etapaTimes);
     },
 
     renderCharts(movs) {
-        // Agrupar por dia
         const dailyData = {};
         const dailyRejections = {};
 
         movs.forEach(m => {
             const dateStr = new Date(m.timestamps?.criacao?.toDate ? m.timestamps.criacao.toDate() : m.timestamps?.criacao).toLocaleDateString('pt-BR');
             const pals = parseInt(m.quantidade?.paletes || 0);
-
             dailyData[dateStr] = (dailyData[dateStr] || 0) + pals;
-
             if (m.historico?.some(h => h.acao === 'REPROVADO_QUALIDADE')) {
                 dailyRejections[dateStr] = (dailyRejections[dateStr] || 0) + pals;
             }
@@ -215,20 +198,14 @@ const IndicadoresModule = {
             return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
         });
 
-        // Chart 1: Paletes por Dia
         this.createChart('chart-paletes-dia', labels, Object.values(dailyData), 'Paletes', '#6366f1');
-
-        // Chart 2: Rejeições por Dia
         const rejectionsData = labels.map(l => dailyRejections[l] || 0);
         this.createChart('chart-rejeicoes-dia', labels, rejectionsData, 'Paletes Reprovados', '#ef4444');
     },
 
     createChart(id, labels, data, label, color) {
         const ctx = document.getElementById(id).getContext('2d');
-
-        // Destruir anterior se existir
         if (this[`chart_${id}`]) this[`chart_${id}`].destroy();
-
         this[`chart_${id}`] = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -246,9 +223,7 @@ const IndicadoresModule = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
+                plugins: { legend: { display: false } },
                 scales: {
                     y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
                     x: { grid: { display: false } }
@@ -260,15 +235,12 @@ const IndicadoresModule = {
     renderLeadTimeCards(times) {
         const container = document.getElementById('lead-time-cards');
         const etapas = Object.keys(times);
-
         container.innerHTML = etapas.map(etapa => {
             const values = times[etapa];
             const avg = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
-
             let color = 'text-indigo-600';
             if (avg > 120) color = 'text-rose-500';
             else if (avg > 60) color = 'text-amber-500';
-
             return `
                 <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm">
                     <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">${etapa}</p>
@@ -281,10 +253,8 @@ const IndicadoresModule = {
 
     formatDuration(mins) {
         if (mins < 60) return `${Math.round(mins)} min`;
-        const levels = [
-            [Math.floor(mins / 60), 'h'],
-            [Math.round(mins % 60), 'min']
-        ];
-        return levels.filter(l => l[0] > 0).map(l => `${l[0]}${l[1]}`).join(' ');
+        const h = Math.floor(mins / 60);
+        const m = Math.round(mins % 60);
+        return `${h}h ${m}min`;
     }
 };
