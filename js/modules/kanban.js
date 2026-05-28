@@ -11,13 +11,23 @@ const KanbanModule = {
         { id: 'RETRABALHO', label: 'Retrabalho', bg: 'col-bg-retrabalho' }
     ],
 
+    // Armazena o estado anterior das movimentações para detectar transições
+    lastPositions: {},
+
     init() {
+        if (this.unsubscribe) this.unsubscribe();
+
         let firstLoad = true;
         this.unsubscribe = Store.subscribe('movimentacoes', (movs) => {
-            if (!firstLoad) {
-                this.checkNewMovs(movs);
+            if (firstLoad) {
+                // Sincroniza estado inicial sem disparar sons
+                movs.forEach(m => {
+                    this.lastPositions[m.id] = m.fluxo?.etapa;
+                });
+                firstLoad = false;
+            } else {
+                this.monitorChanges(movs);
             }
-            firstLoad = false;
 
             if (App.currentView === 'kanban') {
                 this.renderBoard(movs);
@@ -25,24 +35,58 @@ const KanbanModule = {
         });
     },
 
-    checkNewMovs(movs) {
-        // Pega a mais recente com base no timestamp de criação
-        const latest = movs.slice().sort((a, b) => {
-            const timeA = a.timestamps?.criacao?.seconds || 0;
-            const timeB = b.timestamps?.criacao?.seconds || 0;
-            return timeB - timeA;
-        })[0];
+    monitorChanges(movs) {
+        movs.forEach(mov => {
+            const movId = mov.id;
+            const currentEtapa = mov.fluxo?.etapa;
+            const lastEtapa = this.lastPositions[movId];
 
-        if (latest && latest.fluxo?.etapa === 'QUALIDADE' && latest.fluxo?.situacao === 'AGUARDANDO') {
-            const lastNotified = localStorage.getItem('lastNotifiedMov');
-            if (lastNotified !== latest.id) {
-                Utils.notify(`🔔 NOVA MOV: ${latest.idSequencial}`, 'indigo');
-                localStorage.setItem('lastNotifiedMov', latest.id);
-                try {
-                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-                    audio.play();
-                } catch (e) { console.warn('Audio feedback blocked by browser'); }
+            // Detecta se a movimentação é nova ou mudou de etapa
+            if (currentEtapa && currentEtapa !== lastEtapa) {
+                // Só notifica se entrou em uma etapa que requer ação (não finalizado)
+                if (currentEtapa !== 'FINALIZADO') {
+                    if (this.isUserResponsible(currentEtapa)) {
+                        this.triggerNotification(mov);
+                    }
+                }
+                // Atualiza o cache de posição
+                this.lastPositions[movId] = currentEtapa;
             }
+        });
+    },
+
+    isUserResponsible(etapa) {
+        const user = App.user;
+        if (!user) return false;
+
+        // Admin ouve tudo o que acontece (conforme solicitado)
+        if (user.perfil === 'ADMIN') return true;
+
+        // Usuário do setor específico
+        if (user.setor === etapa) return true;
+
+        // Regras especiais de cobertura de setor
+        if (user.setor === 'LOGISTICA' && etapa === 'ARMAZENAGEM') return true;
+        if (user.setor === 'ARTE_FINAL' && etapa === 'RETRABALHO') return true;
+
+        return false;
+    },
+
+    triggerNotification(mov) {
+        const lastNotified = localStorage.getItem(`notify_${mov.id}_${mov.fluxo.etapa}`);
+
+        // Evita duplicidade persistente se o app recarregar
+        if (lastNotified) return;
+
+        Utils.notify(`🔔 ${mov.fluxo.etapa}: ${mov.idSequencial}`, 'indigo');
+        localStorage.setItem(`notify_${mov.id}_${mov.fluxo.etapa}`, 'true');
+
+        try {
+            // Som de notificação curto e profissional
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.play();
+        } catch (e) {
+            console.warn('Feedback sonoro bloqueado pelo navegador ou falha na rede.');
         }
     },
 
@@ -69,12 +113,10 @@ const KanbanModule = {
             </div>
         `;
 
-        // Carrega dados iniciais
         this.init();
     },
 
     renderBoard(movs) {
-        // Limpa colunas
         this.columns.forEach(col => {
             const el = document.getElementById(`col-${col.id}`);
             if (el) el.innerHTML = '';
@@ -82,20 +124,19 @@ const KanbanModule = {
             if (countEl) countEl.innerText = '0';
         });
 
-        // Distribui cards
         const counts = {};
         movs.forEach(mov => {
-            const etapa = mov.fluxo?.etapa || 'QUALIDADE';
-            const colId = etapa;
-            const colEl = document.getElementById(`col-${colId}`);
-
-            if (colEl) {
-                counts[colId] = (counts[colId] || 0) + 1;
-                colEl.appendChild(this.createCard(mov));
+            // Filtrar apenas o que estiver em fluxo ativo (etapa presente nas colunas)
+            const etapa = mov.fluxo?.etapa;
+            if (etapa && this.columns.find(c => c.id === etapa)) {
+                const colEl = document.getElementById(`col-${etapa}`);
+                if (colEl) {
+                    counts[etapa] = (counts[etapa] || 0) + 1;
+                    colEl.appendChild(this.createCard(mov));
+                }
             }
         });
 
-        // Atualiza contadores
         Object.keys(counts).forEach(id => {
             const countEl = document.getElementById(`count-${id}`);
             if (countEl) countEl.innerText = counts[id];
