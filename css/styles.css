@@ -90,8 +90,8 @@
 }
 
 .col-bg-retrabalho {
-    background-color: rgba(245, 158, 11, 0.05);
-    border-top: 4px solid #f59e0b;
+    background-color: rgba(239, 68, 68, 0.05); /* Soft Red */
+    border-top: 4px solid #ef4444; /* Danger Red */
 }
 
 .col-bg-logistica {
@@ -114,7 +114,7 @@
 }
 
 .dark .col-bg-retrabalho {
-    background-color: rgba(245, 158, 11, 0.1);
+    background-color: rgba(239, 68, 68, 0.1);
 }
 
 .dark .col-bg-logistica {

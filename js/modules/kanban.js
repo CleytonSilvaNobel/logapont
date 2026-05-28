@@ -5,10 +5,10 @@
 const KanbanModule = {
     columns: [
         { id: 'QUALIDADE', label: 'Qualidade', bg: 'col-bg-qualidade' },
-        { id: 'RETRABALHO', label: 'Retrabalho', bg: 'col-bg-retrabalho' },
         { id: 'LOGISTICA', label: 'Logística', bg: 'col-bg-logistica' },
         { id: 'PCP', label: 'PCP', bg: 'col-bg-pcp' },
-        { id: 'ARMAZENAGEM', label: 'Armazenagem', bg: 'col-bg-armazenagem' }
+        { id: 'ARMAZENAGEM', label: 'Armazenagem', bg: 'col-bg-armazenagem' },
+        { id: 'RETRABALHO', label: 'Retrabalho', bg: 'col-bg-retrabalho' }
     ],
 
     init() {
