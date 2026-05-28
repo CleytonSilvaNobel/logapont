@@ -23,7 +23,7 @@ const IndicadoresModule = {
         mainContent.innerHTML = `
             <div class="space-y-8 animate-fade-in pb-10">
                 <!-- Filtros -->
-                <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-wrap items-end gap-4 overflow-hidden">
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-wrap items-end gap-4">
                     <div class="flex-1 min-w-[180px]">
                         <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 block">Data Inicial</label>
                         <input type="date" id="filtro-inicio" class="form-input" value="${this.filters.inicio}" onchange="IndicadoresModule.updateFilters()">
@@ -89,7 +89,9 @@ const IndicadoresModule = {
                 <!-- Novos KPIs de Eficiência -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 flex items-center gap-6">
-                        <div id="chart-pie-qualidade" class="w-24 h-24"></div>
+                        <div class="w-20 h-20">
+                            <canvas id="chart-pie-qualidade"></canvas>
+                        </div>
                         <div>
                             <p class="text-[10px] font-bold text-slate-400 uppercase">Taxa de Qualidade Final</p>
                             <h4 class="text-3xl font-bold dark:text-white" id="val-taxa-qualidade">0%</h4>
@@ -97,7 +99,9 @@ const IndicadoresModule = {
                         </div>
                     </div>
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 flex items-center gap-6">
-                        <div id="chart-pie-assertividade" class="w-24 h-24"></div>
+                        <div class="w-20 h-20">
+                            <canvas id="chart-pie-assertividade"></canvas>
+                        </div>
                         <div>
                             <p class="text-[10px] font-bold text-slate-400 uppercase">Assertividade de Apontamento</p>
                             <h4 class="text-3xl font-bold dark:text-white" id="val-taxa-assertividade">0%</h4>
@@ -113,11 +117,11 @@ const IndicadoresModule = {
                         <h3 class="text-lg font-bold brand-font">Análise Automática & Insights</h3>
                     </div>
                     <div id="insights-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Conteúdo JS -->
+                        <!-- Carregado via JS -->
                     </div>
                 </div>
 
-                <!-- Gráficos Combinados e Diários -->
+                <!-- Gríficos Combinados e Diários -->
                 <div class="space-y-8">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm h-[320px]">
@@ -135,7 +139,7 @@ const IndicadoresModule = {
                     </div>
 
                     <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
-                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Visão Combinada: Recebimento vs Problemas (Escala Única)</h4>
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Visão Combinada: Total Apontado vs Problemas</h4>
                         <div class="h-[400px]">
                             <canvas id="chart-combinado-geral"></canvas>
                         </div>
@@ -145,7 +149,7 @@ const IndicadoresModule = {
                 <!-- Lead Time Section -->
                 <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
                     <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Lead Time Médio por Etapa</h3>
-                    <div id="lead-time-cards" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div id="lead-time-cards" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 text-center">
                         <!-- Gerado via JS -->
                     </div>
                 </div>
@@ -236,11 +240,17 @@ const IndicadoresModule = {
 
         // Eficiência KPIs
         const totalDocs = current.length || 1;
-        const taxaQualidade = ((totalDocs - current.filter(m => m.historico?.some(h => h.acao === 'REPROVADO_QUALIDADE')).length) / totalDocs * 100).toFixed(1);
-        const taxaAssertividade = ((totalDocs - current.filter(m => m.historico?.some(h => h.acao === 'ERRO_APONTAMENTO_LOGISTICA')).length) / totalDocs * 100).toFixed(1);
+        const reprovadosCount = current.filter(m => m.historico?.some(h => h.acao === 'REPROVADO_QUALIDADE')).length;
+        const divergenciasCount = current.filter(m => m.historico?.some(h => h.acao === 'ERRO_APONTAMENTO_LOGISTICA')).length;
+
+        const taxaQualidade = ((totalDocs - reprovadosCount) / totalDocs * 100).toFixed(1);
+        const taxaAssertividade = ((totalDocs - divergenciasCount) / totalDocs * 100).toFixed(1);
 
         document.getElementById('val-taxa-qualidade').innerText = `${taxaQualidade}%`;
         document.getElementById('val-taxa-assertividade').innerText = `${taxaAssertividade}%`;
+
+        this.renderPieChart('chart-pie-qualidade', taxaQualidade, '#ef4444');
+        this.renderPieChart('chart-pie-assertividade', taxaAssertividade, '#f59e0b');
 
         // Trends
         const prevConcluidos = previous.reduce((acc, m) => acc + (m.fluxo?.etapa === 'FINALIZADO' ? parseInt(m.quantidade?.paletes || 0) : 0), 0);
@@ -252,6 +262,30 @@ const IndicadoresModule = {
         this.renderTrend('trend-divergencias', totalDivergencias, prevDivergencias, true);
 
         this.renderLeadTimeCards(etapaTimes);
+    },
+
+    renderPieChart(id, percent, color) {
+        const canvas = document.getElementById(id);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (this[`chart_${id}`]) this[`chart_${id}`].destroy();
+
+        this[`chart_${id}`] = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [percent, 100 - percent],
+                    backgroundColor: [color, '#f1f5f9'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '70%',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, datalabels: { display: false } }
+            }
+        });
     },
 
     renderTrend(id, current, previous, inverse) {
@@ -268,6 +302,7 @@ const IndicadoresModule = {
     },
 
     renderCharts(movs) {
+        const dailyTotal = {}; // Todos os paletes apontados no dia
         const dailyConcluidos = {};
         const dailyRejections = {};
         const dailyDivergences = {};
@@ -275,6 +310,8 @@ const IndicadoresModule = {
         movs.forEach(m => {
             const pals = parseInt(m.quantidade?.paletes || 0);
             const dateC = new Date(m.timestamps?.criacao?.toDate ? m.timestamps.criacao.toDate() : m.timestamps?.criacao).toLocaleDateString('pt-BR');
+
+            dailyTotal[dateC] = (dailyTotal[dateC] || 0) + pals;
 
             if (m.fluxo?.etapa === 'FINALIZADO') dailyConcluidos[dateC] = (dailyConcluidos[dateC] || 0) + pals;
 
@@ -291,21 +328,21 @@ const IndicadoresModule = {
             }
         });
 
-        const labels = Array.from(new Set([...Object.keys(dailyConcluidos), ...Object.keys(dailyRejections), ...Object.keys(dailyDivergences)]))
+        const labels = Array.from(new Set([...Object.keys(dailyTotal), ...Object.keys(dailyRejections), ...Object.keys(dailyDivergences)]))
             .sort((a, b) => {
                 const [da, ma, ya] = a.split('/');
                 const [db, mb, yb] = b.split('/');
                 return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
             });
 
-        // Gráficos Individuais (Linha)
+        // Gráficos Individuais
         this.createChart('chart-paletes-dia', 'line', labels, [{ label: 'Recebidos', data: labels.map(l => dailyConcluidos[l] || 0), borderColor: '#6366f1', tension: 0.4, fill: true, backgroundColor: '#6366f111' }], false);
         this.createChart('chart-rejeicoes-dia', 'line', labels, [{ label: 'Reprovados', data: labels.map(l => dailyRejections[l] || 0), borderColor: '#ef4444', tension: 0.4, fill: true, backgroundColor: '#ef444411' }], false);
         this.createChart('chart-divergencia-dia', 'line', labels, [{ label: 'Divergências', data: labels.map(l => dailyDivergences[l] || 0), borderColor: '#f59e0b', tension: 0.4, fill: true, backgroundColor: '#f59e0b11' }], false);
 
-        // Gráfico Combinado Geral
+        // Gráfico Combinado Geral - AGORA COM TOTAL APONTADO NAS BARRAS
         this.createChart('chart-combinado-geral', 'bar', labels, [
-            { type: 'bar', label: 'Recebimentos (Barras)', data: labels.map(l => dailyConcluidos[l] || 0), backgroundColor: '#6366f122', borderColor: '#6366f1', borderWidth: 1, borderRadius: 5 },
+            { type: 'bar', label: 'Total Apontado (Barras)', data: labels.map(l => dailyTotal[l] || 0), backgroundColor: '#6366f122', borderColor: '#6366f1', borderWidth: 1, borderRadius: 5 },
             { type: 'line', label: 'Reprovações (Linha)', data: labels.map(l => dailyRejections[l] || 0), borderColor: '#ef4444', borderDash: [5, 5], tension: 0.3, pointStyle: 'circle', pointRadius: 5 },
             { type: 'line', label: 'Divergências (Linha)', data: labels.map(l => dailyDivergences[l] || 0), borderColor: '#f59e0b', tension: 0.3, pointStyle: 'rect', pointRadius: 5 }
         ], true);
@@ -383,7 +420,7 @@ const IndicadoresModule = {
             if (avg > 120) color = 'text-rose-500';
             else if (avg > 60) color = 'text-amber-500';
             return `
-                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm text-center">
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm">
                     <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">${etapa}</p>
                     <p class="text-lg font-bold ${color}">${avg > 0 ? this.formatDuration(avg) : '-'}</p>
                     <p class="text-[9px] text-slate-400 mt-1">${values.length} movimentações</p>
