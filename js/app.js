@@ -138,15 +138,17 @@ const App = {
             </div>
 
             <div class="flex items-center gap-4">
-                <!-- Botão Nova Movimentação (Corrigido) -->
-                <button onclick="KanbanModule.openNewMovementModal()" class="btn btn-primary h-10 px-6 hidden md:flex">
-                    <i data-lucide="plus"></i> Nova Movimentação
-                </button>
+                ${(this.user.setor === 'ARTE_FINAL' || this.user.perfil === 'ADMIN') ? `
+                    <!-- Botão Nova Movimentação (Corrigido) -->
+                    <button onclick="KanbanModule.openNewMovementModal()" class="btn btn-primary h-10 px-6 hidden md:flex">
+                        <i data-lucide="plus"></i> Nova Movimentação
+                    </button>
 
-                <!-- Atalho Mobile -->
-                <button onclick="KanbanModule.openNewMovementModal()" class="md:hidden p-2 bg-blue-600 text-white rounded-lg shadow-lg">
-                    <i data-lucide="plus" class="w-5 h-5"></i>
-                </button>
+                    <!-- Atalho Mobile -->
+                    <button onclick="KanbanModule.openNewMovementModal()" class="md:hidden p-2 bg-blue-600 text-white rounded-lg shadow-lg">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
+                    </button>
+                ` : ''}
 
                 <div class="h-8 w-[1px] bg-gray-200 dark:bg-slate-800 mx-1"></div>
 

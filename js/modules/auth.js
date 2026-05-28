@@ -52,6 +52,11 @@ const AuthModule = {
                             <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Senha</label>
                             <input type="password" id="login-password" class="form-input" placeholder="••••••••">
                         </div>
+                        <div class="flex justify-end">
+                            <button onclick="AuthModule.handleResetPassword()" class="text-xs font-bold text-indigo-500 hover:text-indigo-600 transition-colors">
+                                Esqueci minha senha
+                            </button>
+                        </div>
                         <div id="login-error" class="text-red-500 text-sm text-center hidden"></div>
                         <button onclick="AuthModule.handleLogin()" id="btn-login" class="w-full btn btn-primary py-4 rounded-2xl text-lg mt-4">
                             <span>Acessar Sistema</span>
@@ -152,5 +157,12 @@ const AuthModule = {
             console.error(error);
             Utils.notify('Erro ao enviar e-mail: ' + error.message, 'danger');
         }
+    },
+
+    async handleResetPassword() {
+        const email = document.getElementById('login-email').value.trim();
+        const targetEmail = prompt('Confirme seu e-mail para redefinição de senha:', email || '');
+        if (!targetEmail) return;
+        this.sendResetEmail(targetEmail);
     }
 };
