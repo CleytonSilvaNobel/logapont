@@ -6,9 +6,23 @@
 const Store = {
     /**
      * Busca documentos de uma coleção com suporte a filtros, ordenação e paginação
+     * @param {string} collectionName 
+     * @param {Array|Object} filtersOrOptions - Array de filtros (legado) ou Objeto de opções (novo)
      */
-    async list(collectionName, options = {}) {
-        const { filters = [], orderByField = null, orderDir = 'desc', limit = null, startAfter = null } = options;
+    async list(collectionName, filtersOrOptions = []) {
+        let filters = [];
+        let options = {};
+
+        // Detectar se é o formato novo (objeto) ou legado (array de filtros)
+        if (Array.isArray(filtersOrOptions)) {
+            filters = filtersOrOptions;
+        } else {
+            options = filtersOrOptions;
+            filters = options.filters || [];
+        }
+
+        const { orderByField = null, orderDir = 'desc', limit = null, startAfter = null } = options;
+
         try {
             let q = FB.db.collection(collectionName);
 
@@ -29,13 +43,21 @@ const Store = {
             }
 
             const snapshot = await q.get();
-            return {
-                docs: snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-                lastVisible: snapshot.docs[snapshot.docs.length - 1] || null
-            };
+            const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // Se o usuário solicitou opções de paginação/ordenação explícitas via objeto,
+            // retornamos o formato de objeto com metadados. Caso contrário, mantemos o array simples (retrocompatibilidade).
+            if (!Array.isArray(filtersOrOptions) && (limit || startAfter || orderByField)) {
+                return {
+                    docs: docs,
+                    lastVisible: snapshot.docs[snapshot.docs.length - 1] || null
+                };
+            }
+
+            return docs;
         } catch (error) {
             console.error(`Erro ao listar ${collectionName}:`, error);
-            return { docs: [], lastVisible: null };
+            return Array.isArray(filtersOrOptions) ? [] : { docs: [], lastVisible: null };
         }
     },
 
