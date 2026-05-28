@@ -138,7 +138,7 @@ const MovimentacaoModule = {
             }
 
             if (!movs.length) {
-                body.innerHTML = `< tr > <td colspan="7" class="p-10 text-center text-slate-400">Nenhuma movimentação encontrada.</td></tr > `;
+                body.innerHTML = `<tr><td colspan="7" class="p-10 text-center text-slate-400">Nenhuma movimentação encontrada.</td></tr>`;
                 document.getElementById('btn-pag-next').disabled = true;
                 return;
             }
@@ -160,7 +160,7 @@ const MovimentacaoModule = {
     renderTableBody(movs) {
         const body = document.getElementById('movs-list-body');
         body.innerHTML = movs.map(mov => `
-            < tr class="border-b border-gray-50 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors" >
+            <tr class="border-b border-gray-50 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                 <td class="p-4 font-bold text-slate-700 dark:text-slate-300">${mov.idSequencial}</td>
                 <td class="p-4">
                     <p class="font-medium text-sm">${mov.produto?.descricao}</p>
@@ -187,7 +187,7 @@ const MovimentacaoModule = {
                         <i data-lucide="eye" class="w-4 h-4"></i>
                     </button>
                 </td>
-            </tr >
+            </tr>
     `).join('');
         lucide.createIcons();
     },
