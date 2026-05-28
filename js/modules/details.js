@@ -121,8 +121,13 @@ const DetailsModule = {
                 </button>
             `);
         } else if (etapa === 'RETRABALHO' && (setor === 'ARTE_FINAL' || perfil === 'ADMIN')) {
+            // Se veio de erro na logística, volta pra logística. Se veio de reprova da qualidade, volta pra qualidade.
+            const hist = mov.historico || [];
+            const lastErrorAction = [...hist].reverse().find(h => h.acao === 'ERRO_APONTAMENTO_LOGISTICA' || h.acao === 'REPROVADO_QUALIDADE');
+            const targetEtapa = (lastErrorAction && lastErrorAction.acao === 'ERRO_APONTAMENTO_LOGISTICA') ? 'LOGISTICA' : 'QUALIDADE';
+
             buttons.push(`
-                <button onclick="DetailsModule.updateFlow('${mov.id}', 'LOGISTICA', 'AGUARDANDO', 'CONCLUIR_RETRABALHO')" class="btn btn-primary flex-1">
+                <button onclick="DetailsModule.updateFlow('${mov.id}', '${targetEtapa}', 'AGUARDANDO', 'CONCLUIR_RETRABALHO')" class="btn btn-primary flex-1">
                     <i data-lucide="send" class="w-5 h-5"></i> Concluir Retrabalho
                 </button>
             `);
