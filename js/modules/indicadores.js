@@ -169,6 +169,11 @@ const IndicadoresModule = {
     async loadStats() {
         try {
             const movs = await Store.list('movimentacoes');
+            const produtos = await Store.list('produtos');
+
+            // Mapa de ID -> Descrição (Master)
+            const prodMap = {};
+            produtos.forEach(p => { prodMap[p.id] = p.descricao; });
 
             const inicio = new Date(this.filters.inicio + 'T00:00:00');
             const fim = new Date(this.filters.fim + 'T23:59:59');
@@ -180,12 +185,12 @@ const IndicadoresModule = {
             const filtered = movs.filter(m => {
                 const data = m.timestamps?.criacao?.toDate ? m.timestamps.criacao.toDate() : new Date(m.timestamps?.criacao);
                 return data >= inicio && data <= fim;
-            });
+            }).map(m => ({ ...m, produtoFinal: prodMap[m.produto?.id] || m.produto?.descricao || 'Outros' }));
 
             const previous = movs.filter(m => {
                 const data = m.timestamps?.criacao?.toDate ? m.timestamps.criacao.toDate() : new Date(m.timestamps?.criacao);
                 return data >= inicioAnterior && data <= fimAnterior;
-            });
+            }).map(m => ({ ...m, produtoFinal: prodMap[m.produto?.id] || m.produto?.descricao || 'Outros' }));
 
             this.calculateMetrics(filtered, previous);
             this.renderCharts(filtered);
@@ -387,7 +392,7 @@ const IndicadoresModule = {
         const prodQuantity = {};
 
         current.forEach(m => {
-            const desc = m.produto?.descricao || 'Outros';
+            const desc = m.produtoFinal;
             if (m.historico?.some(h => h.acao === 'REPROVADO_QUALIDADE')) prodQuality[desc] = (prodQuality[desc] || 0) + 1;
             if (m.historico?.some(h => h.acao === 'ERRO_APONTAMENTO_LOGISTICA')) prodQuantity[desc] = (prodQuantity[desc] || 0) + 1;
         });

@@ -113,10 +113,10 @@ const DetailsModule = {
 
         if (etapa === 'QUALIDADE' && (setor === 'QUALIDADE' || perfil === 'ADMIN')) {
             buttons.push(`
-                <button onclick="DetailsModule.updateFlow('${mov.id}', 'LOGISTICA', 'APROVADO', 'APROVAR_QUALIDADE')" class="btn btn-primary flex-1">
+                <button onclick="DetailsModule.updateFlow('${mov.id}', 'LOGISTICA', 'APROVADO', 'APROVAR_QUALIDADE')" class="btn btn-danger-grad flex-1">
                     <i data-lucide="check-circle" class="w-5 h-5"></i> Aprovar Qualidade
                 </button>
-                <button onclick="DetailsModule.reprovar('${mov.id}')" class="btn btn-danger flex-1">
+                <button onclick="DetailsModule.reprovar('${mov.id}')" class="btn btn-danger-grad flex-1 opacity-80 backdrop-blur-sm">
                     <i data-lucide="x-circle" class="w-5 h-5"></i> Reprovar
                 </button>
             `);
@@ -127,28 +127,28 @@ const DetailsModule = {
             const targetEtapa = (lastErrorAction && lastErrorAction.acao === 'ERRO_APONTAMENTO_LOGISTICA') ? 'LOGISTICA' : 'QUALIDADE';
 
             buttons.push(`
-                <button onclick="DetailsModule.updateFlow('${mov.id}', '${targetEtapa}', 'AGUARDANDO', 'CONCLUIR_RETRABALHO')" class="btn btn-primary flex-1">
+                <button onclick="DetailsModule.updateFlow('${mov.id}', '${targetEtapa}', 'AGUARDANDO', 'CONCLUIR_RETRABALHO')" class="btn btn-success-grad flex-1">
                     <i data-lucide="send" class="w-5 h-5"></i> Concluir Retrabalho
                 </button>
             `);
         } else if (etapa === 'LOGISTICA' && (setor === 'LOGISTICA' || perfil === 'ADMIN')) {
             buttons.push(`
-                <button onclick="DetailsModule.updateFlow('${mov.id}', 'PCP', 'AGUARDANDO', 'CONFERIDO_LOGISTICA')" class="btn btn-primary flex-1">
+                <button onclick="DetailsModule.updateFlow('${mov.id}', 'PCP', 'AGUARDANDO', 'CONFERIDO_LOGISTICA')" class="btn btn-success-grad flex-1">
                     <i data-lucide="forward" class="w-5 h-5"></i> Encaminhar PCP
                 </button>
-                <button onclick="DetailsModule.divergencia('${mov.id}')" class="btn btn-danger flex-1">
+                <button onclick="DetailsModule.divergencia('${mov.id}')" class="btn btn-danger-grad flex-1">
                     <i data-lucide="alert-triangle" class="w-5 h-5"></i> Divergência
                 </button>
             `);
         } else if (etapa === 'PCP' && (setor === 'PCP' || perfil === 'ADMIN')) {
             buttons.push(`
-                <button onclick="DetailsModule.updateFlow('${mov.id}', 'ARMAZENAGEM', 'AGUARDANDO', 'APONTADO_PCP')" class="btn btn-primary flex-1">
+                <button onclick="DetailsModule.updateFlow('${mov.id}', 'ARMAZENAGEM', 'AGUARDANDO', 'APONTADO_PCP')" class="btn btn-success-grad flex-1">
                     <i data-lucide="database" class="w-5 h-5"></i> Apontar PCP
                 </button>
             `);
         } else if (etapa === 'ARMAZENAGEM' && (setor === 'ARMAZENAGEM' || setor === 'LOGISTICA' || perfil === 'ADMIN')) {
             buttons.push(`
-                <button onclick="DetailsModule.updateFlow('${mov.id}', 'FINALIZADO', 'CONCLUIDO', 'ARMAZENADO')" class="btn btn-primary flex-1">
+                <button onclick="DetailsModule.updateFlow('${mov.id}', 'FINALIZADO', 'CONCLUIDO', 'ARMAZENADO')" class="btn btn-success-grad flex-1">
                     <i data-lucide="archive" class="w-5 h-5"></i> Finalizar Movimentação
                 </button>
             `);
@@ -157,7 +157,7 @@ const DetailsModule = {
         // BOTAO EDITAR (Admin sempre, Arte Final se estiver em Retrabalho)
         if (perfil === 'ADMIN' || (setor === 'ARTE_FINAL' && etapa === 'RETRABALHO')) {
             buttons.push(`
-                <button onclick="DetailsModule.openEditModal('${mov.id}')" class="btn btn-secondary flex-1 border-indigo-200 text-indigo-600">
+                <button onclick="DetailsModule.openEditModal('${mov.id}')" class="btn btn-warning-grad flex-1">
                     <i data-lucide="edit-3" class="w-5 h-5"></i> Editar Lançamento
                 </button>
             `);

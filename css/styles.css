@@ -83,6 +83,21 @@
     @apply bg-danger text-white hover:bg-red-600 shadow-lg shadow-red-500/20;
 }
 
+.btn-success-grad {
+    @apply bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-emerald-500/30 transition-all border-none;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+}
+
+.btn-danger-grad {
+    @apply bg-gradient-to-r from-rose-500 to-red-600 text-white hover:shadow-rose-500/30 transition-all border-none;
+    box-shadow: 0 4px 15px rgba(244, 63, 94, 0.2);
+}
+
+.btn-warning-grad {
+    @apply bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:shadow-amber-500/30 transition-all border-none;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+}
+
 /* Kanban Column Colors */
 .col-bg-qualidade {
     background-color: rgba(99, 102, 241, 0.05);
@@ -90,8 +105,10 @@
 }
 
 .col-bg-retrabalho {
-    background-color: rgba(239, 68, 68, 0.05); /* Soft Red */
-    border-top: 4px solid #ef4444; /* Danger Red */
+    background-color: rgba(239, 68, 68, 0.05);
+    /* Soft Red */
+    border-top: 4px solid #ef4444;
+    /* Danger Red */
 }
 
 .col-bg-logistica {
