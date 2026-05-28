@@ -5,9 +5,10 @@
 
 const Store = {
     /**
-     * Busca todos os documentos de uma coleção com filtros opcionais
+     * Busca documentos de uma coleção com suporte a filtros, ordenação e paginação
      */
-    async list(collectionName, filters = []) {
+    async list(collectionName, options = {}) {
+        const { filters = [], orderByField = null, orderDir = 'desc', limit = null, startAfter = null } = options;
         try {
             let q = FB.db.collection(collectionName);
 
@@ -15,11 +16,26 @@ const Store = {
                 q = q.where(f.field, f.op, f.value);
             });
 
+            if (orderByField) {
+                q = q.orderBy(orderByField, orderDir);
+            }
+
+            if (startAfter) {
+                q = q.startAfter(startAfter);
+            }
+
+            if (limit) {
+                q = q.limit(limit);
+            }
+
             const snapshot = await q.get();
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            return {
+                docs: snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+                lastVisible: snapshot.docs[snapshot.docs.length - 1] || null
+            };
         } catch (error) {
             console.error(`Erro ao listar ${collectionName}:`, error);
-            return [];
+            return { docs: [], lastVisible: null };
         }
     },
 
