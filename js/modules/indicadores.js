@@ -35,6 +35,9 @@ const IndicadoresModule = {
                     <button onclick="IndicadoresModule.updateFilters()" class="btn btn-primary px-8">
                         <i data-lucide="refresh-cw"></i> Atualizar
                     </button>
+                    <p class="w-full text-[10px] text-slate-400 font-medium italic mt-2 ml-1">
+                        * Tendências comparam o período selecionado com o período imediatamente anterior de mesma duração.
+                    </p>
                 </div>
 
                 <!-- Cards Gerais Otimizados -->
@@ -91,30 +94,28 @@ const IndicadoresModule = {
                         <h3 class="text-lg font-bold brand-font">Análise Automática & Insights</h3>
                     </div>
                     <div id="insights-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="animate-pulse flex space-x-4">
-                            <div class="flex-1 space-y-4 py-1">
-                                <div class="h-4 bg-white/20 rounded w-3/4"></div>
-                                <div class="space-y-2">
-                                    <div class="h-4 bg-white/20 rounded"></div>
-                                    <div class="h-4 bg-white/20 rounded w-5/6"></div>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Carregado via JS -->
                     </div>
                 </div>
 
                 <!-- Gríficos Principais -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
-                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Recebimentos Diários (Paletes)</h4>
-                        <div class="h-[300px]">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Recebimentos Diários</h4>
+                        <div class="h-[250px]">
                             <canvas id="chart-paletes-dia"></canvas>
                         </div>
                     </div>
                     <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
-                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Resumo de Divergências e Reprovações</h4>
-                        <div class="h-[300px]">
-                            <canvas id="chart-problemas-resumo"></canvas>
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6 text-rose-500">Reprovações Diárias</h4>
+                        <div class="h-[250px]">
+                            <canvas id="chart-rejeicoes-dia"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6 text-amber-500">Divergências Diárias</h4>
+                        <div class="h-[250px]">
+                            <canvas id="chart-divergencia-dia"></canvas>
                         </div>
                     </div>
                 </div>
@@ -147,7 +148,7 @@ const IndicadoresModule = {
             const fim = new Date(this.filters.fim + 'T23:59:59');
             const duracao = fim - inicio;
 
-            const inicioAnterior = new Date(inicio.getTime() - duracao - 1);
+            const inicioAnterior = new Date(inicio.getTime() - duracao - (1000 * 60 * 60 * 24)); // -1 dia extra para segurança de range
             const fimAnterior = new Date(inicio.getTime() - 1);
 
             const currentMovs = movs.filter(m => {
@@ -239,7 +240,8 @@ const IndicadoresModule = {
 
     renderCharts(movs) {
         const dailyConcluidos = {};
-        const problemSummary = { 'Qualidade': 0, 'Divergência AF': 0 };
+        const dailyRejections = {};
+        const dailyDivergences = {};
 
         movs.forEach(m => {
             const pals = parseInt(m.quantidade?.paletes || 0);
@@ -249,29 +251,51 @@ const IndicadoresModule = {
                 dailyConcluidos[date] = (dailyConcluidos[date] || 0) + pals;
             }
 
-            if (m.historico?.some(h => h.acao === 'REPROVADO_QUALIDADE')) problemSummary['Qualidade'] += pals;
-            if (m.historico?.some(h => h.acao === 'ERRO_APONTAMENTO_LOGISTICA')) problemSummary['Divergência AF'] += pals;
+            const hReprovado = (m.historico || []).find(h => h.acao === 'REPROVADO_QUALIDADE');
+            if (hReprovado) {
+                const date = new Date(hReprovado.data).toLocaleDateString('pt-BR');
+                dailyRejections[date] = (dailyRejections[date] || 0) + pals;
+            }
+
+            const hDivergencia = (m.historico || []).find(h => h.acao === 'ERRO_APONTAMENTO_LOGISTICA');
+            if (hDivergencia) {
+                const date = new Date(hDivergencia.data).toLocaleDateString('pt-BR');
+                dailyDivergences[date] = (dailyDivergences[date] || 0) + pals;
+            }
         });
 
-        const labels = Object.keys(dailyConcluidos).sort((a, b) => {
-            const [da, ma, ya] = a.split('/');
-            const [db, mb, yb] = b.split('/');
-            return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
-        });
+        const labels = Array.from(new Set([...Object.keys(dailyConcluidos), ...Object.keys(dailyRejections), ...Object.keys(dailyDivergences)]))
+            .sort((a, b) => {
+                const [da, ma, ya] = a.split('/');
+                const [db, mb, yb] = b.split('/');
+                return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
+            });
 
         this.createChart('chart-paletes-dia', 'line', labels, [{
-            label: 'Paletes Concluídos',
-            data: labels.map(l => dailyConcluidos[l]),
+            label: 'Recebidos',
+            data: labels.map(l => dailyConcluidos[l] || 0),
             backgroundColor: '#6366f122',
             borderColor: '#6366f1',
             tension: 0.4,
             fill: true
         }]);
 
-        this.createChart('chart-problemas-resumo', 'doughnut', Object.keys(problemSummary), [{
-            data: Object.values(problemSummary),
-            backgroundColor: ['#ef4444', '#f59e0b', '#6366f1'],
-            borderWidth: 0
+        this.createChart('chart-rejeicoes-dia', 'line', labels, [{
+            label: 'Reprovados',
+            data: labels.map(l => dailyRejections[l] || 0),
+            backgroundColor: '#ef444422',
+            borderColor: '#ef4444',
+            tension: 0.4,
+            fill: true
+        }]);
+
+        this.createChart('chart-divergencia-dia', 'line', labels, [{
+            label: 'Divergências',
+            data: labels.map(l => dailyDivergences[l] || 0),
+            backgroundColor: '#f59e0b22',
+            borderColor: '#f59e0b',
+            tension: 0.4,
+            fill: true
         }]);
     },
 
@@ -288,22 +312,20 @@ const IndicadoresModule = {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: { size: 10 } } },
+                    legend: { display: false },
                     datalabels: {
                         anchor: 'end',
-                        align: 'end',
+                        align: 'top',
                         offset: -2,
-                        backgroundColor: (ctx) => ctx.dataset.borderColor || ctx.dataset.backgroundColor[ctx.dataIndex],
-                        borderRadius: 4,
-                        color: 'white',
+                        color: (ctx) => ctx.dataset.borderColor,
                         font: { weight: 'bold', size: 9 },
                         formatter: (val) => val > 0 ? val : ''
                     }
                 },
-                scales: type !== 'doughnut' ? {
+                scales: {
                     y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
                     x: { grid: { display: false }, ticks: { font: { size: 10 } } }
-                } : {}
+                }
             }
         });
     },
@@ -326,13 +348,11 @@ const IndicadoresModule = {
 
         const totalCurrentProblems = Object.values(prodQuality).reduce((a, b) => a + b, 0) + Object.values(prodQuantity).reduce((a, b) => a + b, 0);
 
-        // Insights HTML
         let html = '';
 
-        // Insight 1: Problema mais frequente
         if (topQuality) {
             html += `
-                <div class="bg-white/10 p-4 rounded-2xl border border-white/10">
+                <div class="bg-white/10 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
                     <p class="text-white/60 text-[10px] uppercase font-bold tracking-widest mb-2">Qualidade Crítica</p>
                     <p class="font-bold text-sm leading-tight">${topQuality[0]}</p>
                     <p class="text-xs mt-2 text-white/80">Este produto teve <b>${topQuality[1]}</b> reprovações no período.</p>
@@ -340,10 +360,9 @@ const IndicadoresModule = {
             `;
         }
 
-        // Insight 2: Divergência de Quantidade
         if (topQuantity) {
             html += `
-                <div class="bg-white/10 p-4 rounded-2xl border border-white/10">
+                <div class="bg-white/10 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
                     <p class="text-white/60 text-[10px] uppercase font-bold tracking-widest mb-2">Erro de Apontamento</p>
                     <p class="font-bold text-sm leading-tight">${topQuantity[0]}</p>
                     <p class="text-xs mt-2 text-white/80">Maior incidência de divergência de quantidade (<b>${topQuantity[1]}</b> vezes).</p>
@@ -351,21 +370,25 @@ const IndicadoresModule = {
             `;
         }
 
-        // Insight 3: Tendência Geral
         const prevProblems = previous.filter(m => m.historico?.some(h => ['REPROVADO_QUALIDADE', 'ERRO_APONTAMENTO_LOGISTICA'].includes(h.acao))).length;
         const trendText = totalCurrentProblems > prevProblems ? 'aumentando' : 'reduzindo';
-        const trendColor = totalCurrentProblems > prevProblems ? 'text-red-300' : 'text-emerald-300';
+        const trendColor = totalCurrentProblems > prevProblems ? 'text-rose-300' : 'text-emerald-300';
+        const trendIcon = totalCurrentProblems > prevProblems ? 'trending-up' : 'trending-down';
 
         html += `
-            <div class="bg-white/10 p-4 rounded-2xl border border-white/10">
+            <div class="bg-white/10 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
                 <p class="text-white/60 text-[10px] uppercase font-bold tracking-widest mb-2">Tendência de Erros</p>
-                <p class="font-bold text-sm ${trendColor}">A taxa de erros está ${trendText}.</p>
-                <p class="text-xs mt-2 text-white/80">Total de ${totalCurrentProblems} problemas detectados contra ${prevProblems} no período anterior.</p>
+                <div class="flex items-center gap-2 ${trendColor} mb-1">
+                    <i data-lucide="${trendIcon}" class="w-4 h-4"></i>
+                    <p class="font-bold text-sm">Taxa de erros em queda</p>
+                </div>
+                <p class="text-xs text-white/80">Total de ${totalCurrentProblems} problemas contra ${prevProblems} no período anterior.</p>
             </div>
         `;
 
         if (!html) html = '<p class="text-sm text-white/60 italic">Dados insuficientes para gerar insights automáticos.</p>';
         container.innerHTML = html;
+        lucide.createIcons();
     },
 
     renderLeadTimeCards(times) {
