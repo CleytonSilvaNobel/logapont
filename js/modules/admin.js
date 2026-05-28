@@ -134,7 +134,6 @@ const AdminModule = {
                                     <option value="LOGISTICA" ${user?.setor === 'LOGISTICA' ? 'selected' : ''}>LOGÍSTICA</option>
                                     <option value="PCP" ${user?.setor === 'PCP' ? 'selected' : ''}>PCP</option>
                                     <option value="ARTE_FINAL" ${user?.setor === 'ARTE_FINAL' ? 'selected' : ''}>ARTE FINAL</option>
-                                    <option value="ARMAZENAGEM" ${user?.setor === 'ARMAZENAGEM' ? 'selected' : ''}>ARMAZENAGEM</option>
                                     <option value="ADMIN" ${user?.setor === 'ADMIN' ? 'selected' : ''}>ADMINISTRAÇÃO</option>
                                 </select>
                             </div>

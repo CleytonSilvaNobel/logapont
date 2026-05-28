@@ -138,7 +138,7 @@ const DetailsModule = {
                     <i data-lucide="database" class="w-5 h-5"></i> Apontar PCP
                 </button>
             `);
-        } else if (etapa === 'ARMAZENAGEM' && (setor === 'ARMAZENAGEM' || perfil === 'ADMIN')) {
+        } else if (etapa === 'ARMAZENAGEM' && (setor === 'ARMAZENAGEM' || setor === 'LOGISTICA' || perfil === 'ADMIN')) {
             buttons.push(`
                 <button onclick="DetailsModule.updateFlow('${mov.id}', 'FINALIZADO', 'CONCLUIDO', 'ARMAZENADO')" class="btn btn-primary flex-1">
                     <i data-lucide="archive" class="w-5 h-5"></i> Finalizar Movimentação
