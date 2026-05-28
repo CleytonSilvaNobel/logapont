@@ -122,14 +122,17 @@ const DetailsModule = {
             `);
         } else if (etapa === 'RETRABALHO' && (setor === 'ARTE_FINAL' || perfil === 'ADMIN')) {
             buttons.push(`
-                <button onclick="DetailsModule.updateFlow('${mov.id}', 'QUALIDADE', 'AGUARDANDO', 'CONCLUIR_RETRABALHO')" class="btn btn-primary flex-1">
-                    <i data-lucide="send" class="w-5 h-5"></i> Reenviar para Qualidade
+                <button onclick="DetailsModule.updateFlow('${mov.id}', 'LOGISTICA', 'AGUARDANDO', 'CONCLUIR_RETRABALHO')" class="btn btn-primary flex-1">
+                    <i data-lucide="send" class="w-5 h-5"></i> Concluir Retrabalho
                 </button>
             `);
         } else if (etapa === 'LOGISTICA' && (setor === 'LOGISTICA' || perfil === 'ADMIN')) {
             buttons.push(`
                 <button onclick="DetailsModule.updateFlow('${mov.id}', 'PCP', 'AGUARDANDO', 'CONFERIDO_LOGISTICA')" class="btn btn-primary flex-1">
                     <i data-lucide="forward" class="w-5 h-5"></i> Encaminhar PCP
+                </button>
+                <button onclick="DetailsModule.divergencia('${mov.id}')" class="btn btn-danger flex-1">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i> Divergência
                 </button>
             `);
         } else if (etapa === 'PCP' && (setor === 'PCP' || perfil === 'ADMIN')) {
@@ -184,6 +187,12 @@ const DetailsModule = {
         const obs = prompt('Descreva o motivo da reprovação (Obrigatório):');
         if (!obs) return Utils.notify('A observação é obrigatória para reprovar.', 'warning');
         this.updateFlow(movId, 'RETRABALHO', 'EM_PROCESSO', 'REPROVADO_QUALIDADE', obs);
+    },
+
+    divergencia(movId) {
+        const obs = prompt('Descreva a divergência encontrada (Obrigatório):');
+        if (!obs) return Utils.notify('A descrição da divergência é obrigatória para registrar.', 'warning');
+        this.updateFlow(movId, 'RETRABALHO', 'AGUARDANDO', 'ERRO_APONTAMENTO_LOGISTICA', obs);
     },
 
     renderNewModal() {

@@ -1,9 +1,7 @@
-# LogApont - Histórico de Alterações (Changelog)
-
-Este arquivo registra o progresso do desenvolvimento e as melhorias implementadas no sistema LogApont.
-
 ## [1.1.0] - 2026-05-28
 ### Adicionado
+- **Fluxo de Divergência**: Novo botão "Divergência" na etapa de Logística para reportar erros da Arte Final com registro obrigatório de motivo.
+- **Indicadores de Retrabalho**: Adicionado card e gráfico de "Divergências por Dia" para monitorar a qualidade dos apontamentos da Arte Final.
 - **Esqueci minha Senha**: Funcionalidade nativa do Firebase Auth para redefinição de senha na tela de login.
 - **Filtros de Pesquisa**: Adicionada barra de busca na lista de movimentações (por Data, ID Sequencial ou Produto).
 - **Paginação**: Implementada paginação de 20 registros por vez na lista de movimentações para ganho de performance.

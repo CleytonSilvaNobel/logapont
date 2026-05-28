@@ -79,6 +79,16 @@ const IndicadoresModule = {
 
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
                         <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-amber-50 dark:bg-amber-500/10 rounded-2xl text-amber-600">
+                                <i data-lucide="alert-triangle"></i>
+                            </div>
+                        </div>
+                        <h4 class="text-3xl font-bold dark:text-white" id="total-divergencia">0</h4>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter mt-1">Divergências (Arte Final)</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
+                        <div class="flex justify-between items-start mb-4">
                             <div class="p-3 bg-blue-50 dark:bg-blue-500/10 rounded-2xl text-blue-600">
                                 <i data-lucide="package-check"></i>
                             </div>
@@ -100,6 +110,12 @@ const IndicadoresModule = {
                         <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Reprovações por Dia (Paletes)</h4>
                         <div class="h-[300px]">
                             <canvas id="chart-rejeicoes-dia"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Divergências por Dia (Paletes)</h4>
+                        <div class="h-[300px]">
+                            <canvas id="chart-divergencia-dia"></canvas>
                         </div>
                     </div>
                 </div>
@@ -137,6 +153,7 @@ const IndicadoresModule = {
         let totalConcluidosPaletes = 0;
         let totalEmProcessoPaletes = 0;
         let totalRejeitadoPaletes = 0;
+        let totalDivergenciaPaletes = 0;
         let totalCicloMs = 0;
         let totalCicloCount = 0;
 
@@ -157,6 +174,10 @@ const IndicadoresModule = {
                 totalRejeitadoPaletes += paletes;
             }
 
+            if (m.historico?.some(h => h.acao === 'ERRO_APONTAMENTO_LOGISTICA')) {
+                totalDivergenciaPaletes += paletes;
+            }
+
             const hist = m.historico || [];
             for (let i = 0; i < hist.length - 1; i++) {
                 const entrada = new Date(hist[i].data);
@@ -173,11 +194,13 @@ const IndicadoresModule = {
 
         const elProcesso = document.getElementById('total-em-processo');
         const elRejeitado = document.getElementById('total-rejeitado');
+        const elDivergencia = document.getElementById('total-divergencia');
         const elConcluidos = document.getElementById('total-concluidos-paletes');
         const elCiclo = document.getElementById('ciclo-medio');
 
         if (elProcesso) elProcesso.innerText = totalEmProcessoPaletes;
         if (elRejeitado) elRejeitado.innerText = totalRejeitadoPaletes;
+        if (elDivergencia) elDivergencia.innerText = totalDivergenciaPaletes;
         if (elConcluidos) elConcluidos.innerText = totalConcluidosPaletes;
 
         if (elCiclo && totalCicloCount > 0) {
@@ -190,6 +213,7 @@ const IndicadoresModule = {
     renderCharts(movs) {
         const dailyConcluidos = {};
         const dailyRejections = {};
+        const dailyDivergences = {};
 
         movs.forEach(m => {
             const pals = parseInt(m.quantidade?.paletes || 0);
@@ -206,10 +230,17 @@ const IndicadoresModule = {
                 const dateReprovacao = new Date(hReprovado.data).toLocaleDateString('pt-BR');
                 dailyRejections[dateReprovacao] = (dailyRejections[dateReprovacao] || 0) + pals;
             }
+
+            // 3. Lógica para DIVERGÊNCIAS - Usa data exata da divergência
+            const hDivergencia = (m.historico || []).find(h => h.acao === 'ERRO_APONTAMENTO_LOGISTICA');
+            if (hDivergencia) {
+                const dateDivergencia = new Date(hDivergencia.data).toLocaleDateString('pt-BR');
+                dailyDivergences[dateDivergencia] = (dailyDivergences[dateDivergencia] || 0) + pals;
+            }
         });
 
-        // Garantir que os labels contenham datas de ambos para manter o eixo X sincronizado
-        const allDates = new Set([...Object.keys(dailyConcluidos), ...Object.keys(dailyRejections)]);
+        // Garantir que os labels contenham datas de todos para manter o eixo X sincronizado
+        const allDates = new Set([...Object.keys(dailyConcluidos), ...Object.keys(dailyRejections), ...Object.keys(dailyDivergences)]);
         const labels = Array.from(allDates).sort((a, b) => {
             const [da, ma, ya] = a.split('/');
             const [db, mb, yb] = b.split('/');
@@ -218,9 +249,11 @@ const IndicadoresModule = {
 
         const concluidosData = labels.map(l => dailyConcluidos[l] || 0);
         const rejectionsData = labels.map(l => dailyRejections[l] || 0);
+        const divergencesData = labels.map(l => dailyDivergences[l] || 0);
 
         this.createChart('chart-paletes-dia', labels, concluidosData, 'Paletes Concluídos', '#6366f1');
         this.createChart('chart-rejeicoes-dia', labels, rejectionsData, 'Paletes Reprovados', '#ef4444');
+        this.createChart('chart-divergencia-dia', labels, divergencesData, 'Paletes com Divergência', '#f59e0b');
     },
 
     createChart(id, labels, data, label, color) {
