@@ -1,0 +1,17 @@
+{
+  "name": "LogApont - Controle Operacional",
+  "short_name": "LogApont",
+  "description": "Sistema de Controle de Movimentação Industrial NobelPack",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
