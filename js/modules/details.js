@@ -154,8 +154,18 @@ const DetailsModule = {
             `);
         }
 
-        // BOTAO EDITAR (Admin sempre, Arte Final se estiver em Retrabalho)
-        if (perfil === 'ADMIN' || (setor === 'ARTE_FINAL' && etapa === 'RETRABALHO')) {
+        // BOTAO EDITAR (Admin sempre, Arte Final se estiver em Retrabalho ou Qualidade)
+        const canUserEdit = perfil === 'ADMIN' || (setor === 'ARTE_FINAL' && (etapa === 'RETRABALHO' || etapa === 'QUALIDADE'));
+
+        // Bloqueio Total após finalizado, exceto para ADMIN
+        let showEdit = false;
+        if (etapa === 'FINALIZADO') {
+            if (perfil === 'ADMIN') showEdit = true;
+        } else if (canUserEdit) {
+            showEdit = true;
+        }
+
+        if (showEdit) {
             buttons.push(`
                 <button onclick="DetailsModule.openEditModal('${mov.id}')" class="btn btn-warning-grad flex-1">
                     <i data-lucide="edit-3" class="w-5 h-5"></i> Editar Lançamento
@@ -319,6 +329,10 @@ const DetailsModule = {
             const mov = await Store.get('movimentacoes', movId);
             if (!mov) return;
 
+            const isQtyLocked = !(App.user.perfil === 'ADMIN' || (App.user.setor === 'ARTE_FINAL' && (mov.fluxo.etapa === 'RETRABALHO' || mov.fluxo.etapa === 'QUALIDADE')));
+            const qtyClass = isQtyLocked ? 'bg-slate-50 dark:bg-slate-800 opacity-70 cursor-not-allowed' : '';
+            const qtyAttr = isQtyLocked ? 'readonly' : '';
+
             const container = document.getElementById('modal-container');
             // Reutiliza parte da estrutura do NewModal mas com botão de Update
             container.innerHTML = `
@@ -344,7 +358,8 @@ const DetailsModule = {
                             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div>
                                     <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Qtd Caixas</label>
-                                    <input type="number" id="edit-qty-cx" class="form-input" value="${mov.quantidade?.caixas}" oninput="DetailsModule.calculateTotalEdit()">
+                                    <input type="number" id="edit-qty-cx" class="form-input ${qtyClass}" value="${mov.quantidade?.caixas}" oninput="DetailsModule.calculateTotalEdit()" ${qtyAttr}>
+                                    ${isQtyLocked ? '<p class="text-[9px] text-rose-400 mt-1 font-bold">Bloqueado para seu perfil</p>' : ''}
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Unid / Caixa</label>
@@ -356,7 +371,7 @@ const DetailsModule = {
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-1 block font-bold">Total Paletes</label>
-                                    <input type="number" id="edit-qty-pal" class="form-input border-indigo-200 dark:border-indigo-500/30 font-bold" value="${mov.quantidade?.paletes || 0}">
+                                    <input type="number" id="edit-qty-pal" class="form-input border-indigo-200 dark:border-indigo-500/30 font-bold ${qtyClass}" value="${mov.quantidade?.paletes || 0}" ${qtyAttr}>
                                 </div>
                             </div>
                             <div>
@@ -396,6 +411,22 @@ const DetailsModule = {
         const btn = document.getElementById('btn-update-mov');
 
         try {
+            // Verificação de Segurança de Último Nível (Client-side)
+            const docSnap = await FB.db.collection('movimentacoes').doc(id).get();
+            const current = docSnap.data();
+            const perfil = App.user.perfil;
+            const setor = App.user.setor;
+            const etapa = current.fluxo.etapa;
+
+            if (etapa === 'FINALIZADO' && perfil !== 'ADMIN') {
+                throw new Error('Apenas administradores podem editar registros finalizados.');
+            }
+
+            const canEditQty = perfil === 'ADMIN' || (setor === 'ARTE_FINAL' && (etapa === 'RETRABALHO' || etapa === 'QUALIDADE'));
+            if (!canEditQty && (current.quantidade.caixas !== cx || current.quantidade.paletes !== pal)) {
+                throw new Error('Seu perfil não tem permissão para alterar quantidades nesta etapa.');
+            }
+
             btn.disabled = true;
             btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Salvando...`;
             lucide.createIcons();
