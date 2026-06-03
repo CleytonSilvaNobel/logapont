@@ -35,6 +35,7 @@ const ProdutosModule = {
                                 <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Código</th>
                                 <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Descrição</th>
                                 <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Unid / Cx</th>
+                                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Autor</th>
                                 <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Ações</th>
                             </tr>
                         </thead>
@@ -67,6 +68,12 @@ const ProdutosModule = {
                     <td class="px-6 py-4 font-bold text-indigo-600">${p.codigo}</td>
                     <td class="px-6 py-4 text-sm dark:text-slate-300 font-medium">${p.descricao}</td>
                     <td class="px-6 py-4 text-sm text-slate-500">${p.unidadePorCaixa}</td>
+                    <td class="px-6 py-4 text-[10px] font-bold uppercase text-slate-400">
+                        <div class="flex items-center gap-1">
+                            <i data-lucide="user" class="w-3 h-3"></i>
+                            ${p.autor || '-'}
+                        </div>
+                    </td>
                     <td class="px-6 py-4 text-right flex justify-end gap-2">
                         <button onclick="ProdutosModule.openModal('${p.id}')" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-all" title="Editar">
                             <i data-lucide="edit-3" class="w-4 h-4"></i>
@@ -142,6 +149,7 @@ const ProdutosModule = {
                 await Store.update('produtos', productId, data);
                 Utils.notify('Produto atualizado!');
             } else {
+                data.autor = App.user.nome;
                 await Store.add('produtos', data);
                 Utils.notify('Produto cadastrado com sucesso!');
             }
@@ -203,7 +211,8 @@ const ProdutosModule = {
                         await Store.add('produtos', {
                             codigo,
                             descricao,
-                            unidadePorCaixa: unidCx
+                            unidadePorCaixa: unidCx,
+                            autor: App.user.nome
                         });
                         successCount++;
                     }
